@@ -1,0 +1,80 @@
+# 虚拟环境
+venv/
+.venv/
+env/
+ENV/
+
+# Python 编译文件
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+
+# 环境配置文件
+.env
+.env.local
+.env.*.local
+
+# 日志文件
+*.log
+logs/
+*.log.*
+
+# 临时文件
+*.tmp
+*.temp
+.tmp/
+.temp/
+
+# 数据库文件
+*.db
+*.sqlite
+*.sqlite3
+data/
+*.csv
+
+# 前端构建产物
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.next/
+frontend/.nuxt/
+
+# 后端依赖（如果使用 pip 安装到本地）
+*.egg-info/
+build/
+dist/
+*.whl
+
+# IDE 文件
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+
+# 测试和覆盖报告
+htmlcov/
+.pytest_cache/
+.coverage
+coverage.xml
+.pytest_cache/
+
+# 其他
+*.pid
+*.seed
+*.pid.lock
