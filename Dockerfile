@@ -13,8 +13,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxslt1-dev \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements.legacy.txt .
+RUN pip install --no-cache-dir -r requirements.legacy.txt
 
 COPY backend ./backend
 COPY frontend ./frontend
