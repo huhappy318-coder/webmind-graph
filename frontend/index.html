@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebMind Graph</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <h1>WebMind Graph</h1>
+        <p>Compare URLs or pasted text and inspect a lightweight article knowledge graph.</p>
+      </div>
+      <div class="topbar-actions">
+        <label class="field compact">
+          <span>Model</span>
+          <select id="modelSelector"></select>
+        </label>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="panel input-panel">
+        <div class="section-head">
+          <h2>Input</h2>
+          <div id="status" class="status">Ready</div>
+        </div>
+
+        <label class="field">
+          <span>URLs (one per line)</span>
+          <textarea
+            id="urlInput"
+            rows="8"
+            placeholder="Paste one or more article URLs here. Example:&#10;https://example.com&#10;https://www.python.org/about/"
+          ></textarea>
+        </label>
+
+        <label class="field">
+          <span>Manual text</span>
+          <textarea
+            id="manualText"
+            rows="10"
+            placeholder="Paste article text here when scraping is blocked, the page needs JavaScript rendering, or you want a quick local demo."
+          ></textarea>
+        </label>
+
+        <div class="button-row">
+          <button id="analyzeButton" class="primary">Start Analysis</button>
+          <button id="crawlButton" class="secondary">Test Crawl</button>
+        </div>
+
+        <div id="errorBox" class="message error-box hidden" role="alert"></div>
+
+        <section class="summary-block">
+          <h2>Run Summary</h2>
+          <div id="statsGrid" class="stats-grid">
+            <div class="stat-card"><span>Total</span><strong id="statArticles">0</strong></div>
+            <div class="stat-card"><span>Success</span><strong id="statSuccess">0</strong></div>
+            <div class="stat-card"><span>Failed</span><strong id="statFailed">0</strong></div>
+            <div class="stat-card"><span>Nodes</span><strong id="statNodes">0</strong></div>
+            <div class="stat-card"><span>Links</span><strong id="statLinks">0</strong></div>
+            <div class="stat-card"><span>Model</span><strong id="statModel">mock</strong></div>
+          </div>
+          <div id="summary" class="summary-content">No analysis yet.</div>
+        </section>
+
+        <section class="summary-block">
+          <h2>Articles</h2>
+          <div id="articles" class="article-list"></div>
+        </section>
+      </section>
+
+      <section class="panel graph-panel">
+        <div class="section-head">
+          <h2>Knowledge Graph</h2>
+          <div id="graphMeta" class="meta"></div>
+        </div>
+        <div id="graphLegend" class="graph-legend"></div>
+        <div id="graphContainer" class="graph-container"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <script src="/websocket.js"></script>
+  <script src="/graph.js"></script>
+  <script src="/panel.js"></script>
+</body>
+</html>
