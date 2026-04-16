@@ -1,9 +1,9 @@
 (function () {
   const LEGEND_ITEMS = [
-    { type: "article", label: "Article" },
-    { type: "concept", label: "Concept" },
-    { type: "keyword", label: "Keyword" },
-    { type: "entity", label: "Entity" }
+    { type: "article", label: { zh: "文章", en: "Article", bilingual: "文章 / Article" } },
+    { type: "concept", label: { zh: "概念", en: "Concept", bilingual: "概念 / Concept" } },
+    { type: "keyword", label: { zh: "关键词", en: "Keyword", bilingual: "关键词 / Keyword" } },
+    { type: "entity", label: { zh: "实体", en: "Entity", bilingual: "实体 / Entity" } }
   ];
 
   function renderGraph(graphData) {
@@ -14,14 +14,14 @@
     renderLegend(legend);
 
     if (!graphData || !Array.isArray(graphData.nodes) || graphData.nodes.length === 0) {
-      container.innerHTML = '<div class="empty-state">No graph data yet. Add URLs or text, then start analysis.</div>';
-      meta.textContent = "0 nodes, 0 links";
+      container.innerHTML = `<div class="empty-state">${escapeHtml(t("emptyState"))}</div>`;
+      meta.textContent = t("emptyMeta");
       return;
     }
 
     const width = container.clientWidth || 720;
     const height = Math.max(container.clientHeight || 640, 420);
-    meta.textContent = `${graphData.metadata?.article_count || 0} article(s), ${graphData.nodes.length} node(s), ${graphData.links.length} link(s)`;
+    meta.textContent = formatMeta(graphData);
 
     const tooltip = d3.select(container)
       .append("div")
@@ -32,7 +32,7 @@
       .append("svg")
       .attr("viewBox", `0 0 ${width} ${height}`)
       .attr("role", "img")
-      .attr("aria-label", "Knowledge graph");
+      .attr("aria-label", t("graphAria"));
 
     const simulation = d3.forceSimulation(graphData.nodes)
       .force("link", d3.forceLink(graphData.links).id(d => d.id).distance(d => d.relation === "mentions" ? 85 : 120))
@@ -73,8 +73,8 @@
         tooltip.style("opacity", 1)
           .html(
             `<strong>${escapeHtml(d.label)}</strong><br>` +
-            `type: ${escapeHtml(d.type)}<br>` +
-            `sources: ${(d.sources || []).length}`
+            `${escapeHtml(t("tooltipType"))}: ${escapeHtml(formatNodeType(d.type))}<br>` +
+            `${escapeHtml(t("tooltipSources"))}: ${(d.sources || []).length}`
           );
       })
       .on("mousemove", function (event) {
@@ -106,8 +106,64 @@
 
   function renderLegend(legend) {
     legend.innerHTML = LEGEND_ITEMS
-      .map(item => `<span class="legend-item"><i class="legend-dot node-${safeClass(item.type)}"></i>${item.label}</span>`)
+      .map(item => `<span class="legend-item"><i class="legend-dot node-${safeClass(item.type)}"></i>${escapeHtml(item.label[getLanguage()] || item.label.bilingual)}</span>`)
       .join("");
+  }
+
+  function getLanguage() {
+    return window.__webmindLanguage || "bilingual";
+  }
+
+  function t(key) {
+    const language = getLanguage();
+    const copy = {
+      zh: {
+        emptyState: "还没有图谱数据。请输入 URL 或文本后开始分析。",
+        emptyMeta: "0 个节点，0 条连线",
+        graphAria: "知识图谱",
+        tooltipType: "类型",
+        tooltipSources: "来源数",
+        articles: "篇文章",
+        nodes: "个节点",
+        links: "条连线"
+      },
+      en: {
+        emptyState: "No graph data yet. Add URLs or text, then start analysis.",
+        emptyMeta: "0 nodes, 0 links",
+        graphAria: "Knowledge graph",
+        tooltipType: "Type",
+        tooltipSources: "Sources",
+        articles: "article(s)",
+        nodes: "node(s)",
+        links: "link(s)"
+      },
+      bilingual: {
+        emptyState: "还没有图谱数据，请输入 URL 或文本后开始分析。 / No graph data yet. Add URLs or text, then start analysis.",
+        emptyMeta: "0 个节点，0 条连线 / 0 nodes, 0 links",
+        graphAria: "知识图谱 / Knowledge graph",
+        tooltipType: "类型 / Type",
+        tooltipSources: "来源数 / Sources",
+        articles: "篇文章 / article(s)",
+        nodes: "个节点 / node(s)",
+        links: "条连线 / link(s)"
+      }
+    };
+    return (copy[language] && copy[language][key]) || copy.bilingual[key] || key;
+  }
+
+  function formatMeta(graphData) {
+    return `${graphData.metadata?.article_count || 0} ${t("articles")}，${graphData.nodes.length} ${t("nodes")}，${graphData.links.length} ${t("links")}`;
+  }
+
+  function formatNodeType(type) {
+    const map = {
+      article: { zh: "文章", en: "Article", bilingual: "文章 / Article" },
+      concept: { zh: "概念", en: "Concept", bilingual: "概念 / Concept" },
+      keyword: { zh: "关键词", en: "Keyword", bilingual: "关键词 / Keyword" },
+      entity: { zh: "实体", en: "Entity", bilingual: "实体 / Entity" }
+    };
+    const language = getLanguage();
+    return (map[type] && map[type][language]) || (map[type] && map[type].bilingual) || type;
   }
 
   function nodeRadius(node) {

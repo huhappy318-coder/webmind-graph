@@ -11,11 +11,19 @@
     <header class="topbar">
       <div>
         <h1>WebMind Graph</h1>
-        <p>Compare URLs or pasted text and inspect a lightweight article knowledge graph.</p>
+        <p id="heroText">对比 URL 或粘贴文本，查看轻量级文章知识图谱。 / Compare URLs or pasted text and inspect a lightweight article knowledge graph.</p>
       </div>
       <div class="topbar-actions">
+        <label class="field compact field-language">
+          <span id="languageLabel">语言 / Language</span>
+          <select id="languageSelector">
+            <option value="bilingual">中文 + English</option>
+            <option value="zh">中文</option>
+            <option value="en">English</option>
+          </select>
+        </label>
         <label class="field compact">
-          <span>Model</span>
+          <span id="modelLabel">模型 / Model</span>
           <select id="modelSelector"></select>
         </label>
       </div>
@@ -24,57 +32,57 @@
     <main class="layout">
       <section class="panel input-panel">
         <div class="section-head">
-          <h2>Input</h2>
-          <div id="status" class="status">Ready</div>
+          <h2 id="inputTitle">输入 / Input</h2>
+          <div id="status" class="status">就绪 / Ready</div>
         </div>
 
         <label class="field">
-          <span>URLs (one per line)</span>
+          <span id="urlsLabel">URL（每行一个） / URLs (one per line)</span>
           <textarea
             id="urlInput"
             rows="8"
-            placeholder="Paste one or more article URLs here. Example:&#10;https://example.com&#10;https://www.python.org/about/"
+            placeholder="在这里粘贴一个或多个文章链接。示例：&#10;https://example.com&#10;https://www.python.org/about/&#10;&#10;Paste one or more article URLs here."
           ></textarea>
         </label>
 
         <label class="field">
-          <span>Manual text</span>
+          <span id="manualTextLabel">手动文本 / Manual text</span>
           <textarea
             id="manualText"
             rows="10"
-            placeholder="Paste article text here when scraping is blocked, the page needs JavaScript rendering, or you want a quick local demo."
+            placeholder="当网页抓取失败、页面依赖 JavaScript 渲染，或你只想快速演示时，可直接粘贴正文。&#10;&#10;Paste article text here when scraping is blocked or you want a quick demo."
           ></textarea>
         </label>
 
         <div class="button-row">
-          <button id="analyzeButton" class="primary">Start Analysis</button>
-          <button id="crawlButton" class="secondary">Test Crawl</button>
+          <button id="analyzeButton" class="primary">开始分析 / Start Analysis</button>
+          <button id="crawlButton" class="secondary">抓取测试 / Test Crawl</button>
         </div>
 
         <div id="errorBox" class="message error-box hidden" role="alert"></div>
 
         <section class="summary-block">
-          <h2>Run Summary</h2>
+          <h2 id="summaryTitle">运行摘要 / Run Summary</h2>
           <div id="statsGrid" class="stats-grid">
-            <div class="stat-card"><span>Total</span><strong id="statArticles">0</strong></div>
-            <div class="stat-card"><span>Success</span><strong id="statSuccess">0</strong></div>
-            <div class="stat-card"><span>Failed</span><strong id="statFailed">0</strong></div>
-            <div class="stat-card"><span>Nodes</span><strong id="statNodes">0</strong></div>
-            <div class="stat-card"><span>Links</span><strong id="statLinks">0</strong></div>
-            <div class="stat-card"><span>Model</span><strong id="statModel">mock</strong></div>
+            <div class="stat-card"><span id="statArticlesLabel">总数 / Total</span><strong id="statArticles">0</strong></div>
+            <div class="stat-card"><span id="statSuccessLabel">成功 / Success</span><strong id="statSuccess">0</strong></div>
+            <div class="stat-card"><span id="statFailedLabel">失败 / Failed</span><strong id="statFailed">0</strong></div>
+            <div class="stat-card"><span id="statNodesLabel">节点 / Nodes</span><strong id="statNodes">0</strong></div>
+            <div class="stat-card"><span id="statLinksLabel">连线 / Links</span><strong id="statLinks">0</strong></div>
+            <div class="stat-card"><span id="statModelLabel">模型 / Model</span><strong id="statModel">mock</strong></div>
           </div>
-          <div id="summary" class="summary-content">No analysis yet.</div>
+          <div id="summary" class="summary-content">还没有分析结果。 / No analysis yet.</div>
         </section>
 
         <section class="summary-block">
-          <h2>Articles</h2>
+          <h2 id="articlesTitle">文章列表 / Articles</h2>
           <div id="articles" class="article-list"></div>
         </section>
       </section>
 
       <section class="panel graph-panel">
         <div class="section-head">
-          <h2>Knowledge Graph</h2>
+          <h2 id="graphTitle">知识图谱 / Knowledge Graph</h2>
           <div id="graphMeta" class="meta"></div>
         </div>
         <div id="graphLegend" class="graph-legend"></div>

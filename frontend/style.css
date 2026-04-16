@@ -94,6 +94,17 @@ body {
   min-width: 220px;
 }
 
+.topbar-actions {
+  display: flex;
+  gap: 12px;
+  align-items: end;
+  flex-wrap: wrap;
+}
+
+.field-language {
+  min-width: 180px;
+}
+
 textarea,
 select,
 button {
@@ -417,6 +428,10 @@ button.secondary {
   .topbar {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .topbar-actions {
+    width: 100%;
   }
 
   .article-card dl,
