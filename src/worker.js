@@ -1,16 +1,17 @@
-import { MODELS, analyzeInput, fetchAndExtractContent, getActiveModel } from "./webmind.js";
+import { analyzeInput, fetchAndExtractContent, getActiveModel, listModels } from "./webmind.js";
 
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    const models = listModels(env);
 
     if (url.pathname === "/api/available-models" && request.method === "GET") {
-      return json({ models: MODELS });
+      return json({ models });
     }
 
     if (url.pathname === "/api/active-model" && request.method === "GET") {
       const active = getActiveModel(env);
-      const model = MODELS.find((item) => item.name === active) || MODELS.find((item) => item.name === "mock");
+      const model = models.find((item) => item.name === active) || models.find((item) => item.name === "mock");
       return json({ active_model: active, display_name: model.display_name });
     }
 

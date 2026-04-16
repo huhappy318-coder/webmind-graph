@@ -4,6 +4,9 @@
       heroText: "对比 URL 或粘贴文本，查看轻量级文章知识图谱。 / Compare URLs or pasted text and inspect a lightweight article knowledge graph.",
       languageLabel: "语言 / Language",
       modelLabel: "模型 / Model",
+      modelHelpSingle: "当前线上演示版仅启用模拟模型，其他模型会在接入真实 Provider 后开放。 / Only the mock model is available in the hosted demo right now.",
+      modelHelpMulti: "可切换已启用模型，未启用项会标记为即将支持。 / Switch between enabled models. Disabled items are marked as coming soon.",
+      comingSoonSuffix: "（即将支持） / (Coming soon)",
       inputTitle: "输入 / Input",
       ready: "就绪 / Ready",
       waitingInput: "等待输入 / Waiting for input",
@@ -50,6 +53,9 @@
       heroText: "对比 URL 或粘贴文本，查看轻量级文章知识图谱。",
       languageLabel: "语言",
       modelLabel: "模型",
+      modelHelpSingle: "当前线上演示版仅启用模拟模型，其他模型会在接入真实 Provider 后开放。",
+      modelHelpMulti: "可切换已启用模型，未启用项会标记为即将支持。",
+      comingSoonSuffix: "（即将支持）",
       inputTitle: "输入",
       ready: "就绪",
       waitingInput: "等待输入",
@@ -96,6 +102,9 @@
       heroText: "Compare URLs or pasted text and inspect a lightweight article knowledge graph.",
       languageLabel: "Language",
       modelLabel: "Model",
+      modelHelpSingle: "Only the mock model is enabled in the hosted demo right now. Other models will be unlocked after real provider integration.",
+      modelHelpMulti: "Switch between enabled models. Disabled items are marked as coming soon.",
+      comingSoonSuffix: "(Coming soon)",
       inputTitle: "Input",
       ready: "Ready",
       waitingInput: "Waiting for input",
@@ -141,6 +150,7 @@
   };
 
   const modelSelector = document.getElementById("modelSelector");
+  const modelHelp = document.getElementById("modelHelp");
   const languageSelector = document.getElementById("languageSelector");
   const urlInput = document.getElementById("urlInput");
   const manualText = document.getElementById("manualText");
@@ -170,16 +180,25 @@
   async function loadModels() {
     const response = await fetch("/api/available-models");
     const data = await response.json();
+    const models = data.models || [];
     modelSelector.innerHTML = "";
-    (data.models || []).forEach(model => {
+    models.forEach(model => {
       const option = document.createElement("option");
       option.value = model.name;
-      option.textContent = model.display_name;
+      option.textContent = model.available_for_use
+        ? model.display_name
+        : `${model.display_name} ${t("comingSoonSuffix")}`.trim();
       option.disabled = !model.available_for_use;
       option.selected = model.default;
       modelSelector.appendChild(option);
     });
-    modelSelector.value = "mock";
+    const activeModel = models.find((item) => item.available_for_use && item.default)
+      || models.find((item) => item.available_for_use)
+      || models.find((item) => item.name === "mock");
+    modelSelector.value = activeModel ? activeModel.name : "mock";
+    const enabledCount = models.filter((item) => item.available_for_use).length;
+    modelSelector.disabled = enabledCount <= 1;
+    modelHelp.textContent = enabledCount <= 1 ? t("modelHelpSingle") : t("modelHelpMulti");
   }
 
   function bindEvents() {
@@ -375,6 +394,7 @@
     setText("heroText", t("heroText"));
     setText("languageLabel", t("languageLabel"));
     setText("modelLabel", t("modelLabel"));
+    modelHelp.textContent = modelSelector.disabled ? t("modelHelpSingle") : t("modelHelpMulti");
     setText("inputTitle", t("inputTitle"));
     setText("urlsLabel", t("urlsLabel"));
     setText("manualTextLabel", t("manualTextLabel"));

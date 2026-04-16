@@ -105,6 +105,12 @@ body {
   min-width: 180px;
 }
 
+.model-help {
+  max-width: 360px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 textarea,
 select,
 button {

@@ -14,7 +14,7 @@ const TECH_ENTITY_HINTS = new Set([
   "api", "apis", "d3", "cloudflare", "worker", "workers",
 ]);
 
-export const MODELS = [
+const BASE_MODELS = [
   ["anthropic", "Anthropic Claude"],
   ["openai", "OpenAI GPT-4o"],
   ["gemini", "Google Gemini"],
@@ -22,17 +22,31 @@ export const MODELS = [
   ["qwen", "Qwen/通义千问"],
   ["kimi", "Kimi/月之暗面"],
   ["mock", "Mock Model"],
-].map(([name, displayName]) => ({
+];
+
+export const MODELS = BASE_MODELS.map(([name, displayName]) => ({
   name,
   display_name: displayName,
   configured: name === "mock",
   default: name === "mock",
   available_for_use: name === "mock",
+  reason: name === "mock" ? null : "Provider wiring is not enabled in this Cloudflare demo yet.",
 }));
+
+export function listModels(env = {}) {
+  return BASE_MODELS.map(([name, displayName]) => ({
+    name,
+    display_name: displayName,
+    configured: name === "mock",
+    default: name === getActiveModel(env),
+    available_for_use: name === "mock",
+    reason: name === "mock" ? null : "Coming soon in the hosted demo.",
+  }));
+}
 
 export function getActiveModel(env = {}) {
   const requested = String(env.ACTIVE_MODEL || "mock").toLowerCase();
-  const exists = MODELS.find((item) => item.name === requested);
+  const exists = BASE_MODELS.find((item) => item[0] === requested);
   return exists ? requested : "mock";
 }
 
@@ -270,8 +284,9 @@ export function extractKnowledgeGraph(text, title = "", sourceId = "") {
 }
 
 function normalizeModel(requestedModel, env = {}) {
+  const availableModels = listModels(env);
   const requested = String(requestedModel || getActiveModel(env)).toLowerCase();
-  return MODELS.some((item) => item.name === requested && item.available_for_use) ? requested : "mock";
+  return availableModels.some((item) => item.name === requested && item.available_for_use) ? requested : "mock";
 }
 
 function extractKeywords(text) {
