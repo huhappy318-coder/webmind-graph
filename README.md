@@ -1,4 +1,5 @@
 # WebMind Graph
+<img width="2995" height="1689" alt="image" src="https://github.com/user-attachments/assets/26137f31-9546-4e17-8782-00ef1ec4bb21" />
 
 WebMind Graph 目前已经整理成适合直接上传 GitHub，并由 Cloudflare 直接导入托管的版本。
 
