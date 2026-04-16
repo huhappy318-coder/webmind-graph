@@ -24,30 +24,34 @@ const BASE_MODELS = [
   ["mock", "Mock Model"],
 ];
 
-export const MODELS = BASE_MODELS.map(([name, displayName]) => ({
-  name,
-  display_name: displayName,
-  configured: name === "mock",
-  default: name === "mock",
-  available_for_use: name === "mock",
-  reason: name === "mock" ? null : "Provider wiring is not enabled in this Cloudflare demo yet.",
-}));
+const MODEL_ENV_VARS = {
+  anthropic: "ANTHROPIC_API_KEY",
+  openai: "OPENAI_API_KEY",
+  gemini: "GEMINI_API_KEY",
+  deepseek: "DEEPSEEK_API_KEY",
+  qwen: "QWEN_API_KEY",
+  kimi: "KIMI_API_KEY",
+};
+
+const IMPLEMENTED_MODELS = new Set(["mock", "deepseek"]);
+
+export const MODELS = BASE_MODELS.map(([name, displayName]) =>
+  normalizeModelDescriptor(name, displayName, {}),
+);
 
 export function listModels(env = {}) {
-  return BASE_MODELS.map(([name, displayName]) => ({
-    name,
-    display_name: displayName,
-    configured: name === "mock",
-    default: name === getActiveModel(env),
-    available_for_use: name === "mock",
-    reason: name === "mock" ? null : "Coming soon in the hosted demo.",
-  }));
+  const active = getActiveModel(env);
+  return BASE_MODELS.map(([name, displayName]) => {
+    const descriptor = normalizeModelDescriptor(name, displayName, env);
+    return {
+      ...descriptor,
+      default: name === active,
+    };
+  });
 }
 
 export function getActiveModel(env = {}) {
-  const requested = String(env.ACTIVE_MODEL || "mock").toLowerCase();
-  const exists = BASE_MODELS.find((item) => item[0] === requested);
-  return exists ? requested : "mock";
+  return resolveUsableModel(env.ACTIVE_MODEL || "mock", env);
 }
 
 export async function fetchAndExtractContent(url) {
@@ -126,29 +130,35 @@ export async function analyzeSources(urls, manualText, model, env = {}) {
     });
   }
 
-  const activeModel = normalizeModel(model, env);
+  const requestedModel = String(model || env.ACTIVE_MODEL || "mock").toLowerCase();
+  const activeModel = normalizeModel(requestedModel, env);
   const builder = createGraphBuilder(activeModel);
   const highlights = [];
+  const providerWarnings = [];
   let successCount = 0;
 
-  articles.forEach((article, index) => {
+  for (const [index, article] of articles.entries()) {
     if (!article.success || !article.content) {
-      return;
+      continue;
     }
     const sourceId = article.source_type === "url" ? article.url : `manual-${index + 1}`;
-    const extraction = extractKnowledgeGraph(article.content, article.title, sourceId);
+    const extraction = await extractKnowledgeGraphForModel(article.content, article.title, sourceId, activeModel, env);
     mergeGraphData(builder, extraction.graph, sourceId);
     successCount += 1;
     if (extraction.summary) {
       highlights.push(`${article.title}: ${extraction.summary}`);
     }
-  });
+    if (extraction.warning) {
+      providerWarnings.push(extraction.warning);
+    }
+  }
 
   const graph = exportGraph(builder);
   const failedCount = articles.length - successCount;
   const success = successCount > 0;
+  const providerNote = providerWarnings.length ? ` Fallbacks: ${providerWarnings.slice(0, 2).join(" ")}` : "";
   const summary = success
-    ? `Processed ${articles.length} source(s): ${successCount} succeeded, ${failedCount} failed. Built a graph with ${graph.metadata.node_count} nodes and ${graph.metadata.link_count} links. Highlights: ${highlights.slice(0, 2).join(" ")}`
+    ? `Processed ${articles.length} source(s): ${successCount} succeeded, ${failedCount} failed. Built a graph with ${graph.metadata.node_count} nodes and ${graph.metadata.link_count} links using ${activeModel}. Highlights: ${highlights.slice(0, 2).join(" ")}${providerNote}`
     : "No readable sources were analyzed successfully. Try another URL or paste text directly for a guaranteed demo path.";
 
   return {
@@ -168,8 +178,82 @@ export async function analyzeSources(urls, manualText, model, env = {}) {
       timestamp: new Date().toISOString(),
       manual_text_used: Boolean(manualText),
       url_count: urls.length,
+      provider_fallback_count: providerWarnings.length,
+      provider_warnings: providerWarnings,
     },
   };
+}
+
+async function extractKnowledgeGraphForModel(text, title, sourceId, modelName, env = {}) {
+  if (modelName === "deepseek" && hasEnvValue(env, "DEEPSEEK_API_KEY")) {
+    try {
+      return await extractKnowledgeGraphWithDeepSeek(text, title, sourceId, env);
+    } catch (error) {
+      const fallback = extractKnowledgeGraph(text, title, sourceId);
+      fallback.warning = `DeepSeek fallback for "${title || sourceId}": ${String(error.message || error).slice(0, 180)}`;
+      fallback.graph.metadata.provider = "mock";
+      fallback.graph.metadata.fallback_from = "deepseek";
+      return fallback;
+    }
+  }
+  return extractKnowledgeGraph(text, title, sourceId);
+}
+
+async function extractKnowledgeGraphWithDeepSeek(text, title, sourceId, env = {}) {
+  const apiKey = String(env.DEEPSEEK_API_KEY || "").trim();
+  if (!apiKey) {
+    throw new Error("Missing DEEPSEEK_API_KEY");
+  }
+
+  const prompt = buildDeepSeekPrompt(title, text);
+  const response = await fetch("https://api.deepseek.com/chat/completions", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: String(env.DEEPSEEK_MODEL || "deepseek-chat"),
+      temperature: 0.2,
+      max_tokens: 900,
+      response_format: { type: "json_object" },
+      messages: [
+        {
+          role: "system",
+          content: [
+            "You extract a compact article knowledge graph and must respond with JSON only.",
+            "Return an object with keys: summary, concepts, keywords, entities, relations.",
+            "summary must be a concise string.",
+            "concepts, keywords, entities must be arrays of short strings.",
+            "relations must be an array of objects with source, target, relation.",
+            "Allowed relation values: related_to, co_occurs_with.",
+            "Use the word json and follow the requested schema strictly.",
+          ].join(" "),
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`DeepSeek returned HTTP ${response.status}: ${body.slice(0, 240)}`);
+  }
+
+  const payload = await response.json();
+  const content = payload?.choices?.[0]?.message?.content;
+  if (!content) {
+    throw new Error("DeepSeek returned an empty response.");
+  }
+
+  const parsed = parseJsonObject(content);
+  return materializeStructuredGraph(parsed, title, sourceId, {
+    provider: "deepseek",
+    model: String(env.DEEPSEEK_MODEL || "deepseek-chat"),
+  });
 }
 
 export function extractKnowledgeGraph(text, title = "", sourceId = "") {
@@ -284,9 +368,185 @@ export function extractKnowledgeGraph(text, title = "", sourceId = "") {
 }
 
 function normalizeModel(requestedModel, env = {}) {
-  const availableModels = listModels(env);
-  const requested = String(requestedModel || getActiveModel(env)).toLowerCase();
-  return availableModels.some((item) => item.name === requested && item.available_for_use) ? requested : "mock";
+  return resolveUsableModel(requestedModel || getActiveModel(env), env);
+}
+
+function resolveUsableModel(requestedModel, env = {}) {
+  const requested = String(requestedModel || "mock").toLowerCase();
+  const descriptor = BASE_MODELS.find((item) => item[0] === requested);
+  if (!descriptor) {
+    return "mock";
+  }
+  const state = normalizeModelDescriptor(descriptor[0], descriptor[1], env);
+  return state.available_for_use ? state.name : "mock";
+}
+
+function normalizeModelDescriptor(name, displayName, env = {}) {
+  const envVar = MODEL_ENV_VARS[name] || null;
+  const implemented = IMPLEMENTED_MODELS.has(name);
+  const configured = name === "mock" ? true : hasEnvValue(env, envVar);
+  const available = name === "mock" ? true : implemented && configured;
+  let reason = null;
+
+  if (name !== "mock" && !configured) {
+    reason = envVar ? `Set ${envVar} to enable this provider.` : "Missing provider configuration.";
+  } else if (name !== "mock" && configured && !implemented) {
+    reason = "API key detected, but this provider is not wired in the Cloudflare demo yet.";
+  }
+
+  return {
+    name,
+    display_name: displayName,
+    configured,
+    default: name === "mock",
+    available_for_use: available,
+    env_var: envVar,
+    reason,
+  };
+}
+
+function hasEnvValue(env, key) {
+  return Boolean(key && String(env[key] || "").trim());
+}
+
+function buildDeepSeekPrompt(title, text) {
+  return [
+    "Please extract a compact article graph in json.",
+    "Schema example:",
+    '{"summary":"...","concepts":["..."],"keywords":["..."],"entities":["..."],"relations":[{"source":"...","target":"...","relation":"related_to"}]}',
+    `Title: ${title || "Untitled"}`,
+    `Content: ${String(text || "").slice(0, 7000)}`,
+  ].join("\n\n");
+}
+
+function parseJsonObject(content) {
+  const raw = String(content || "").trim();
+  try {
+    return JSON.parse(raw);
+  } catch {
+    const fencedMatch = raw.match(/```json\s*([\s\S]*?)```/i) || raw.match(/```([\s\S]*?)```/);
+    if (fencedMatch) {
+      return JSON.parse(fencedMatch[1].trim());
+    }
+    const objectStart = raw.indexOf("{");
+    const objectEnd = raw.lastIndexOf("}");
+    if (objectStart >= 0 && objectEnd > objectStart) {
+      return JSON.parse(raw.slice(objectStart, objectEnd + 1));
+    }
+    throw new Error("Could not parse DeepSeek JSON output.");
+  }
+}
+
+function materializeStructuredGraph(payload, title = "", sourceId = "", meta = {}) {
+  const cleanText = normalizeWhitespace(title || sourceId || "manual");
+  const articleId = slugify(sourceId || title || "manual-article", "article");
+  const sourceRef = sourceId || articleId;
+  const summary = normalizeWhitespace(payload?.summary || "") || summarize(cleanText);
+  const concepts = normalizeTerms(payload?.concepts, 4);
+  const keywords = normalizeTerms(payload?.keywords, 4);
+  const entities = normalizeTerms(payload?.entities, 3);
+  const relationSeed = Array.isArray(payload?.relations) ? payload.relations : [];
+
+  const nodes = [
+    {
+      id: articleId,
+      label: title || "Manual Text",
+      type: "article",
+      weight: 3,
+      sources: [sourceRef],
+      metadata: { title: title || "Manual Text", kind: "article" },
+    },
+  ];
+  const links = [];
+  const seen = new Set([articleId]);
+  const labelToNodeId = new Map();
+
+  const ensureNode = (label, type, weight = 1.8, metadata = {}) => {
+    const normalized = normalizeWhitespace(label);
+    if (!normalized) {
+      return null;
+    }
+    const nodeId = slugify(normalized, type);
+    if (!seen.has(nodeId)) {
+      seen.add(nodeId);
+      nodes.push({
+        id: nodeId,
+        label: normalized,
+        type,
+        weight,
+        sources: [sourceRef],
+        metadata,
+      });
+      links.push({
+        source: articleId,
+        target: nodeId,
+        relation: "mentions",
+        weight,
+        sources: [sourceRef],
+        metadata: {},
+      });
+    }
+    labelToNodeId.set(normalized.toLowerCase(), nodeId);
+    return nodeId;
+  };
+
+  concepts.forEach((item, index) => ensureNode(item, "concept", 2.2 - index * 0.2, { rank: index + 1 }));
+  keywords.forEach((item, index) => ensureNode(item, "keyword", 1.6 - index * 0.1, { rank: index + 1 }));
+  entities.forEach((item, index) => ensureNode(item, "entity", 2.4 - index * 0.2, { rank: index + 1 }));
+
+  relationSeed.slice(0, 8).forEach((relation) => {
+    const sourceLabel = normalizeWhitespace(relation?.source || "");
+    const targetLabel = normalizeWhitespace(relation?.target || "");
+    const relationType = normalizeRelation(relation?.relation);
+    if (!sourceLabel || !targetLabel || sourceLabel.toLowerCase() === targetLabel.toLowerCase()) {
+      return;
+    }
+    const sourceNode = labelToNodeId.get(sourceLabel.toLowerCase()) || ensureNode(sourceLabel, "concept", 1.5, { inferred: true });
+    const targetNode = labelToNodeId.get(targetLabel.toLowerCase()) || ensureNode(targetLabel, "concept", 1.5, { inferred: true });
+    if (!sourceNode || !targetNode) {
+      return;
+    }
+    links.push({
+      source: sourceNode,
+      target: targetNode,
+      relation: relationType,
+      weight: relationType === "co_occurs_with" ? 0.8 : 1.1,
+      sources: [sourceRef],
+      metadata: { provider: meta.provider || "deepseek" },
+    });
+  });
+
+  return {
+    article_id: articleId,
+    title: title || "Manual Text",
+    summary,
+    keywords: keywords.slice(0, 6),
+    graph: {
+      nodes,
+      links,
+      metadata: {
+        provider: meta.provider || "deepseek",
+        model: meta.model || "deepseek-chat",
+        content_length: String(title || sourceId || "").length,
+      },
+    },
+  };
+}
+
+function normalizeTerms(values, limit = 6) {
+  const items = Array.isArray(values) ? values : [];
+  return uniqueBy(
+    items
+      .map((item) => normalizeWhitespace(item))
+      .filter((item) => item && item.length >= 2)
+      .slice(0, limit),
+    (item) => item.toLowerCase(),
+  );
+}
+
+function normalizeRelation(value) {
+  const relation = String(value || "related_to").toLowerCase();
+  return relation === "co_occurs_with" ? "co_occurs_with" : "related_to";
 }
 
 function extractKeywords(text) {

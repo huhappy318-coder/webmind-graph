@@ -8,6 +8,7 @@ WebMind Graph 目前已经整理成适合直接上传 GitHub，并由 Cloudflare
 - Cloudflare Static Assets
 - 前端和 API 同源部署
 - 默认使用 `mock` 模式
+- 已支持通过环境变量启用 `DeepSeek`
 - 不依赖真实 AI API key
 
 ## 当前版本能做什么
@@ -54,6 +55,7 @@ webmind-graph/
   核心业务逻辑，包括：
   - URL 抓取
   - mock 抽取
+  - DeepSeek 抽取
   - 图谱生成
   - 图谱融合
   - analyze 响应结构生成
@@ -126,11 +128,18 @@ Wrangler 一般会输出一个本地地址，通常是：
 
 ### 当前可选环境变量
 
-目前只有一个可选变量：
+目前推荐这几个变量：
 
 - `ACTIVE_MODEL=mock`
+- `DEEPSEEK_API_KEY=你的 DeepSeek Key`
+- `DEEPSEEK_MODEL=deepseek-chat`
 
-因为默认就是 mock 模式，所以即使你不配置任何外部 API secret，也可以直接部署演示。
+说明：
+
+- 不配置任何 secret 时，系统会继续使用 `mock`
+- 配置 `DEEPSEEK_API_KEY` 后，前端下拉框会自动启用 `DeepSeek`
+- 如果你还希望默认直接使用 DeepSeek，可以把 `ACTIVE_MODEL` 设为 `deepseek`
+- 其他模型当前仍会读取配置状态，但托管版 demo 只真正接通了 `mock` 和 `DeepSeek`
 
 ## API 列表
 
