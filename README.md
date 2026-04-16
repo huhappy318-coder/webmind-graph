@@ -1,26 +1,31 @@
 # WebMind Graph
 
-WebMind Graph is now organized for direct GitHub -> Cloudflare deployment.
+WebMind Graph 目前已经整理成适合直接上传 GitHub，并由 Cloudflare 直接导入托管的版本。
 
-The primary hosting path is:
+当前主部署路线是：
 
 - Cloudflare Workers
 - Cloudflare Static Assets
-- Same-origin frontend + API
-- Default `mock` mode with no real AI key requirement
+- 前端和 API 同源部署
+- 默认使用 `mock` 模式
+- 不依赖真实 AI API key
 
-## What This Version Supports
+## 当前版本能做什么
 
-- Open the frontend directly from `/`
-- Input one or more article URLs
-- Input manual article text
-- Analyze content in mock mode
-- Return graph JSON from `/api/analyze`
-- Render a D3 knowledge graph in the browser
-- Crawl a URL via `/api/crawl`
-- Read `/api/available-models` and `/api/active-model`
+这个版本已经支持：
 
-## Cloudflare-Ready Structure
+- 访问 `/` 直接打开前端页面
+- 输入一个或多个文章 URL
+- 粘贴手动文本内容
+- 使用 mock 模式进行分析
+- 通过 `/api/analyze` 返回图谱 JSON
+- 在浏览器中渲染 D3 知识图谱
+- 通过 `/api/crawl` 测试抓取单个 URL
+- 通过 `/api/available-models` 和 `/api/active-model` 获取模型信息
+
+## 当前适合的部署方式
+
+这个仓库现在是 **Cloudflare 优先** 的结构，不再以 Docker 或 Python 常驻服务作为线上主入口。
 
 ```text
 webmind-graph/
@@ -40,65 +45,85 @@ webmind-graph/
   .dev.vars.example
 ```
 
-## Main Runtime Files
+## 核心文件说明
 
-- `src/worker.js`: Cloudflare Worker entry
-- `src/webmind.js`: API logic, crawl logic, mock extraction, graph building
-- `frontend/`: static assets served by Cloudflare
-- `wrangler.toml`: Worker + asset configuration
+- `src/worker.js`
+  Cloudflare Worker 入口文件，负责处理 `/api/*` 请求，以及回退到静态资源。
 
-## Local Preview
+- `src/webmind.js`
+  核心业务逻辑，包括：
+  - URL 抓取
+  - mock 抽取
+  - 图谱生成
+  - 图谱融合
+  - analyze 响应结构生成
 
-1. Install dependencies:
+- `frontend/`
+  前端静态资源目录，会由 Cloudflare 直接托管。
 
-   ```bash
-   npm install
-   ```
+- `wrangler.toml`
+  Cloudflare Workers 配置文件，包含 Worker 入口、兼容日期、静态资源目录等信息。
 
-2. Optional local vars file:
+## 本地预览方法
 
-   Windows:
+### 1. 安装依赖
 
-   ```bash
-   copy .dev.vars.example .dev.vars
-   ```
+```bash
+npm install
+```
 
-   macOS/Linux:
+### 2. 可选：复制本地变量文件
 
-   ```bash
-   cp .dev.vars.example .dev.vars
-   ```
+Windows:
 
-3. Start local preview:
+```bash
+copy .dev.vars.example .dev.vars
+```
 
-   ```bash
-   npm run dev
-   ```
+macOS / Linux:
 
-4. Open the local Wrangler URL, usually:
+```bash
+cp .dev.vars.example .dev.vars
+```
 
-   [http://localhost:8787](http://localhost:8787)
+### 3. 本地启动 Cloudflare Worker 预览
 
-## Deploy to Cloudflare
+```bash
+npm run dev
+```
 
-This repository is intended to be imported directly from GitHub into Cloudflare Workers.
+### 4. 打开本地地址
 
-### Included Config
+Wrangler 一般会输出一个本地地址，通常是：
+
+[http://localhost:8787](http://localhost:8787)
+
+## 部署到 Cloudflare
+
+这个仓库的目标就是：
+
+> 上传 GitHub
+> 在 Cloudflare 中导入仓库
+> 直接部署
+
+### 仓库中已经包含的部署文件
 
 - `wrangler.toml`
 - `package.json`
-- Worker source in `src/`
-- Static assets in `frontend/`
+- `src/worker.js`
+- `frontend/`
 
-### Variables
+### 当前可选环境变量
 
-Current optional variable:
+目前只有一个可选变量：
 
 - `ACTIVE_MODEL=mock`
 
-No external API secret is required for the default demo.
+因为默认就是 mock 模式，所以即使你不配置任何外部 API secret，也可以直接部署演示。
 
-## API Endpoints
+## API 列表
+
+当前版本保留这些接口能力：
 
 - `GET /`
 - `GET /api/health`
@@ -107,21 +132,43 @@ No external API secret is required for the default demo.
 - `POST /api/crawl`
 - `POST /api/analyze`
 
-## Local Tests
+## 本地测试
 
-Run the Worker-oriented smoke tests:
+当前推荐运行 Worker 侧测试：
 
 ```bash
 npm test
 ```
 
-## Known Limitations
+## 当前限制
 
-- URL crawling is lightweight and may fail on JavaScript-heavy or bot-protected sites
-- Mock extraction is deterministic and shallow compared with a real LLM backend
-- D3 is loaded from a CDN
-- The old Python/FastAPI files remain in the repo as legacy local artifacts, but they are no longer the cloud deployment path
+- URL 抓取是轻量规则方案，对强反爬、纯 JavaScript 页面、登录墙页面不一定稳定
+- mock 抽取是规则法，不是真正的大模型语义理解
+- D3 仍然通过 CDN 加载
+- 仓库里还保留了旧的 Python / FastAPI / Docker 文件，主要用于历史兼容或本地参考，但已经不是云端主部署路径
 
-## Legacy Files
+## 关于旧文件
 
-Older Python backend and Docker files may still exist for local experimentation, but they are not the intended Cloudflare deployment route. Use the Worker entry plus `frontend/` assets for hosting.
+仓库中仍然保留一些旧的本地开发遗留文件，例如：
+
+- `backend/`
+- `Dockerfile`
+- `docker-compose.yml`
+- `requirements.txt`
+- `test_*.py`
+
+这些文件现在不再是 Cloudflare 托管主方案的一部分。
+
+如果你的目标是：
+
+> GitHub 上传
+> Cloudflare 直接导入
+> 在线演示
+
+那么应该以以下内容为准：
+
+- `src/worker.js`
+- `src/webmind.js`
+- `frontend/`
+- `wrangler.toml`
+- `package.json`
