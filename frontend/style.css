@@ -20,7 +20,7 @@ body {
   font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
   color: var(--text);
   background:
-    radial-gradient(circle at top left, rgba(15, 122, 229, 0.06), transparent 28%),
+    linear-gradient(180deg, rgba(15, 122, 229, 0.06), transparent 320px),
     var(--bg);
 }
 
@@ -43,10 +43,33 @@ body {
   margin: 0;
 }
 
+.topbar h1 {
+  font-size: 40px;
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+
 .topbar p {
-  margin: 6px 0 0;
+  margin: 10px 0 0;
   color: var(--muted);
   max-width: 720px;
+  line-height: 1.55;
+}
+
+.workflow-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.workflow-chips span {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--muted);
+  font-size: 12px;
+  padding: 6px 10px;
 }
 
 .layout {
@@ -142,8 +165,13 @@ textarea {
 
 .button-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 14px;
+}
+
+.button-row.compact-actions {
+  margin-top: -6px;
 }
 
 button {
@@ -172,6 +200,16 @@ button.primary {
 button.secondary {
   background: var(--accent-soft);
   color: var(--accent);
+}
+
+button.ghost {
+  background: #fff;
+  color: var(--muted);
+  border: 1px solid var(--line);
+}
+
+button.ghost.danger {
+  color: var(--danger);
 }
 
 .status {
@@ -254,6 +292,10 @@ button.secondary {
   color: var(--text);
   line-height: 1.6;
   white-space: pre-wrap;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfdff;
 }
 
 .article-list {
@@ -438,6 +480,21 @@ button.secondary {
 
   .topbar-actions {
     width: 100%;
+  }
+
+  .topbar h1 {
+    font-size: 30px;
+  }
+
+  .field.compact,
+  .field-language,
+  .model-help {
+    min-width: 100%;
+    max-width: none;
+  }
+
+  button {
+    flex: 1 1 140px;
   }
 
   .article-card dl,

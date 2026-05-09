@@ -12,6 +12,11 @@
       <div>
         <h1>WebMind Graph</h1>
         <p id="heroText">对比 URL 或粘贴文本，查看轻量级文章知识图谱。 / Compare URLs or pasted text and inspect a lightweight article knowledge graph.</p>
+        <div class="workflow-chips">
+          <span>1. 输入内容</span>
+          <span>2. 选择模型</span>
+          <span>3. 生成图谱</span>
+        </div>
       </div>
       <div class="topbar-actions">
         <label class="field compact field-language">
@@ -58,6 +63,13 @@
         <div class="button-row">
           <button id="analyzeButton" class="primary">开始分析 / Start Analysis</button>
           <button id="crawlButton" class="secondary">抓取测试 / Test Crawl</button>
+          <button id="sampleButton" class="secondary">填入示例 / Example</button>
+        </div>
+
+        <div class="button-row compact-actions">
+          <button id="copyButton" class="ghost">复制摘要 / Copy</button>
+          <button id="exportButton" class="ghost">导出 JSON / Export</button>
+          <button id="clearButton" class="ghost danger">清空 / Clear</button>
         </div>
 
         <div id="errorBox" class="message error-box hidden" role="alert"></div>

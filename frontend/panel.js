@@ -7,6 +7,15 @@
       modelHelpSingle: "当前线上演示版仅启用模拟模型，其他模型会在接入真实 Provider 后开放。 / Only the mock model is available in the hosted demo right now.",
       modelHelpMulti: "可切换已启用模型，未启用项会标记为即将支持。 / Switch between enabled models. Disabled items are marked as coming soon.",
       comingSoonSuffix: "（即将支持） / (Coming soon)",
+      copied: "已复制摘要 / Summary copied",
+      copyFailed: "复制失败，请手动选择文本复制。 / Copy failed. Select the text manually.",
+      exported: "已导出 JSON / JSON exported",
+      cleared: "已清空本地数据 / Local data cleared",
+      sampleLoaded: "已填入示例 / Example loaded",
+      sampleButton: "填入示例 / Example",
+      copyButton: "复制摘要 / Copy",
+      exportButton: "导出 JSON / Export",
+      clearButton: "清空 / Clear",
       inputTitle: "输入 / Input",
       ready: "就绪 / Ready",
       waitingInput: "等待输入 / Waiting for input",
@@ -37,6 +46,7 @@
       needUrlError: "请先输入至少一个 URL 再测试抓取。 / Add at least one URL first to test crawling.",
       noSummary: "暂无摘要。 / No summary available.",
       noSummaryReturned: "接口未返回摘要。 / No summary returned.",
+      apiFallback: "模型列表加载失败，已切换到本地模拟模型。 / Model list failed; using local mock model.",
       initFailed: "初始化失败 / Init failed",
       analyzeRequestFailed: "分析请求失败 / Analyze request failed",
       crawlRequestFailed: "抓取请求失败 / Crawl failed",
@@ -56,6 +66,15 @@
       modelHelpSingle: "当前线上演示版仅启用模拟模型，其他模型会在接入真实 Provider 后开放。",
       modelHelpMulti: "可切换已启用模型，未启用项会标记为即将支持。",
       comingSoonSuffix: "（即将支持）",
+      copied: "已复制摘要",
+      copyFailed: "复制失败，请手动选择文本复制。",
+      exported: "已导出 JSON",
+      cleared: "已清空本地数据",
+      sampleLoaded: "已填入示例",
+      sampleButton: "填入示例",
+      copyButton: "复制摘要",
+      exportButton: "导出 JSON",
+      clearButton: "清空",
       inputTitle: "输入",
       ready: "就绪",
       waitingInput: "等待输入",
@@ -86,6 +105,7 @@
       needUrlError: "请先输入至少一个 URL 再测试抓取。",
       noSummary: "暂无摘要。",
       noSummaryReturned: "接口未返回摘要。",
+      apiFallback: "模型列表加载失败，已切换到本地模拟模型。",
       initFailed: "初始化失败",
       analyzeRequestFailed: "分析请求失败",
       crawlRequestFailed: "抓取请求失败",
@@ -105,6 +125,15 @@
       modelHelpSingle: "Only the mock model is enabled in the hosted demo right now. Other models will be unlocked after real provider integration.",
       modelHelpMulti: "Switch between enabled models. Disabled items are marked as coming soon.",
       comingSoonSuffix: "(Coming soon)",
+      copied: "Summary copied",
+      copyFailed: "Copy failed. Select the text manually.",
+      exported: "JSON exported",
+      cleared: "Local data cleared",
+      sampleLoaded: "Example loaded",
+      sampleButton: "Example",
+      copyButton: "Copy Summary",
+      exportButton: "Export JSON",
+      clearButton: "Clear",
       inputTitle: "Input",
       ready: "Ready",
       waitingInput: "Waiting for input",
@@ -135,6 +164,7 @@
       needUrlError: "Add at least one URL first to test crawling.",
       noSummary: "No summary available.",
       noSummaryReturned: "No summary returned.",
+      apiFallback: "Model list failed; using local mock model.",
       initFailed: "Init failed",
       analyzeRequestFailed: "Analyze request failed",
       crawlRequestFailed: "Crawl failed",
@@ -160,12 +190,17 @@
   const errorBox = document.getElementById("errorBox");
   const analyzeButton = document.getElementById("analyzeButton");
   const crawlButton = document.getElementById("crawlButton");
+  const sampleButton = document.getElementById("sampleButton");
+  const copyButton = document.getElementById("copyButton");
+  const exportButton = document.getElementById("exportButton");
+  const clearButton = document.getElementById("clearButton");
   const statArticles = document.getElementById("statArticles");
   const statSuccess = document.getElementById("statSuccess");
   const statFailed = document.getElementById("statFailed");
   const statNodes = document.getElementById("statNodes");
   const statLinks = document.getElementById("statLinks");
   const statModel = document.getElementById("statModel");
+  const STORAGE_KEY = "webmind-graph-state-v1";
   let currentLanguage = detectLanguage();
 
   async function init() {
@@ -173,13 +208,32 @@
     applyLanguage();
     await loadModels();
     bindEvents();
-    resetDashboard();
-    window.renderGraph({ nodes: [], links: [], metadata: {} });
+    if (!restoreState()) {
+      resetDashboard();
+      window.renderGraph({ nodes: [], links: [], metadata: {} });
+    }
   }
 
   async function loadModels() {
-    const response = await fetch("/api/available-models");
-    const data = await response.json();
+    let data;
+    try {
+      const response = await fetch("/api/available-models");
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      data = await response.json();
+    } catch (error) {
+      data = {
+        models: [{
+          name: "mock",
+          display_name: "Mock Model",
+          available_for_use: true,
+          configured: true,
+          default: true,
+        }],
+      };
+      setStatus(`${t("apiFallback")} ${error.message || ""}`.trim(), "warning");
+    }
     const models = data.models || [];
     modelSelector.innerHTML = "";
     models.forEach(model => {
@@ -204,11 +258,19 @@
   function bindEvents() {
     analyzeButton.addEventListener("click", analyze);
     crawlButton.addEventListener("click", crawlFirstUrl);
+    sampleButton.addEventListener("click", loadExample);
+    copyButton.addEventListener("click", copySummary);
+    exportButton.addEventListener("click", exportJson);
+    clearButton.addEventListener("click", clearLocalData);
+    urlInput.addEventListener("input", saveDraft);
+    manualText.addEventListener("input", saveDraft);
+    modelSelector.addEventListener("change", saveDraft);
     languageSelector.addEventListener("change", () => {
       currentLanguage = languageSelector.value || "bilingual";
       applyLanguage();
       renderArticles(getCurrentArticles());
       window.renderGraph(window.__lastGraphData || { nodes: [], links: [], metadata: {} });
+      saveDraft();
     });
   }
 
@@ -237,6 +299,7 @@
       }
       window.__lastGraphData = data.graph || { nodes: [], links: [], metadata: {} };
       window.__lastArticles = data.articles || [];
+      window.__lastResult = data;
       summary.textContent = data.summary || t("noSummaryReturned");
       renderArticles(data.articles || []);
       updateStats(data.metadata || {}, data.model || "mock");
@@ -246,6 +309,7 @@
       } else {
         setStatus(data.success ? t("analysisComplete") : t("analysisPartial"), data.success ? "success" : "warning");
       }
+      saveDraft();
     } catch (error) {
       resetDashboard();
       renderArticles([]);
@@ -281,6 +345,21 @@
       }
       window.__lastArticles = [data];
       window.__lastGraphData = { nodes: [], links: [], metadata: {} };
+      window.__lastResult = {
+        success: data.success,
+        model: modelSelector.value || "mock",
+        articles: [data],
+        graph: window.__lastGraphData,
+        summary: data.summary || "",
+        metadata: {
+          article_count: 1,
+          success_count: data.success ? 1 : 0,
+          failed_count: data.success ? 0 : 1,
+          node_count: 0,
+          link_count: 0,
+          model: modelSelector.value || "mock"
+        }
+      };
       summary.textContent = data.summary || t("noSummaryReturned");
       renderArticles(window.__lastArticles);
       updateStats({
@@ -295,6 +374,7 @@
         showError(data.error);
       }
       setStatus(data.success ? t("crawlSuccess") : t("crawlFallback"), data.success ? "success" : "warning");
+      saveDraft();
     } catch (error) {
       showError(`${t("crawlFailed")}: ${error.message || error}`);
       setStatus(t("crawlFailed"), "error");
@@ -348,9 +428,143 @@
     updateStats({ article_count: 0, success_count: 0, failed_count: 0, node_count: 0, link_count: 0 }, "mock");
     window.__lastArticles = [];
     window.__lastGraphData = { nodes: [], links: [], metadata: {} };
+    window.__lastResult = null;
     articles.innerHTML = `<div class="article-card muted">${escapeHtml(t("articlesEmpty"))}</div>`;
     summary.textContent = t("summaryEmpty");
     clearError();
+  }
+
+  function loadExample() {
+    urlInput.value = "";
+    manualText.value = [
+      "WebMind Graph helps readers compare multiple articles and turn dense text into a lightweight knowledge graph.",
+      "The demo can extract concepts, keywords, entities, and relationships from pasted content.",
+      "Cloudflare Workers and Pages Functions make the project easy to deploy without a traditional server.",
+      "DeepSeek can be enabled with an environment variable, while mock mode keeps the demo usable without an API key."
+    ].join(" ");
+    saveDraft();
+    clearError();
+    setStatus(t("sampleLoaded"), "success");
+  }
+
+  async function copySummary() {
+    const text = buildReportText();
+    if (!text.trim()) {
+      showError(t("noSummary"));
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      setStatus(t("copied"), "success");
+    } catch {
+      showError(t("copyFailed"));
+    }
+  }
+
+  function exportJson() {
+    const data = {
+      input: buildPayload(),
+      result: window.__lastResult || null,
+      exported_at: new Date().toISOString()
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `webmind-graph-${Date.now()}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    setStatus(t("exported"), "success");
+  }
+
+  function clearLocalData() {
+    safeStorageRemove(STORAGE_KEY);
+    urlInput.value = "";
+    manualText.value = "";
+    resetDashboard();
+    window.renderGraph({ nodes: [], links: [], metadata: {} });
+    setStatus(t("cleared"), "success");
+  }
+
+  function saveDraft() {
+    safeStorageSet(STORAGE_KEY, {
+      urls: urlInput.value,
+      manual_text: manualText.value,
+      model: modelSelector.value || "mock",
+      result: window.__lastResult || null,
+      saved_at: new Date().toISOString()
+    });
+  }
+
+  function restoreState() {
+    const state = safeStorageGet(STORAGE_KEY);
+    if (!state) {
+      return false;
+    }
+    urlInput.value = state.urls || "";
+    manualText.value = state.manual_text || "";
+    if (state.model && modelSelector.querySelector(`option[value="${state.model}"]:not(:disabled)`)) {
+      modelSelector.value = state.model;
+    }
+    if (!state.result) {
+      resetDashboard();
+      window.renderGraph?.({ nodes: [], links: [], metadata: {} });
+      return Boolean(urlInput.value || manualText.value);
+    }
+    window.__lastResult = state.result;
+    window.__lastArticles = state.result.articles || [];
+    window.__lastGraphData = state.result.graph || { nodes: [], links: [], metadata: {} };
+    summary.textContent = state.result.summary || t("summaryEmpty");
+    renderArticles(window.__lastArticles);
+    updateStats(state.result.metadata || {}, state.result.model || modelSelector.value || "mock");
+    window.renderGraph(window.__lastGraphData);
+    setStatus(t("ready"), "");
+    return true;
+  }
+
+  function buildReportText() {
+    const result = window.__lastResult;
+    if (!result) {
+      return summary.textContent || "";
+    }
+    const meta = result.metadata || {};
+    return [
+      "WebMind Graph",
+      "",
+      result.summary || "",
+      "",
+      `Model: ${result.model || meta.model || "mock"}`,
+      `Articles: ${meta.article_count ?? 0}`,
+      `Success: ${meta.success_count ?? 0}`,
+      `Failed: ${meta.failed_count ?? 0}`,
+      `Nodes: ${meta.node_count ?? 0}`,
+      `Links: ${meta.link_count ?? 0}`
+    ].join("\n");
+  }
+
+  function safeStorageGet(key) {
+    try {
+      return JSON.parse(localStorage.getItem(key) || "null");
+    } catch {
+      safeStorageRemove(key);
+      return null;
+    }
+  }
+
+  function safeStorageSet(key, value) {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch {
+      // Storage can be disabled or full; keep the app usable.
+    }
+  }
+
+  function safeStorageRemove(key) {
+    try {
+      localStorage.removeItem(key);
+    } catch {
+      // Ignore storage failures.
+    }
   }
 
   function parseUrls(value) {
@@ -363,6 +577,10 @@
   function setBusy(isBusy) {
     analyzeButton.disabled = isBusy;
     crawlButton.disabled = isBusy;
+    sampleButton.disabled = isBusy;
+    copyButton.disabled = isBusy;
+    exportButton.disabled = isBusy;
+    clearButton.disabled = isBusy;
     analyzeButton.textContent = isBusy ? t("analyzeBusy") : t("analyzeButton");
     crawlButton.textContent = t("crawlButton");
   }
@@ -398,6 +616,10 @@
     setText("inputTitle", t("inputTitle"));
     setText("urlsLabel", t("urlsLabel"));
     setText("manualTextLabel", t("manualTextLabel"));
+    setText("sampleButton", t("sampleButton"));
+    setText("copyButton", t("copyButton"));
+    setText("exportButton", t("exportButton"));
+    setText("clearButton", t("clearButton"));
     setText("summaryTitle", t("summaryTitle"));
     setText("articlesTitle", t("articlesTitle"));
     setText("graphTitle", t("graphTitle"));
@@ -413,7 +635,11 @@
     if (!status.dataset.kind) setStatus(t("ready"), "");
     else if (status.dataset.kind === "loading") setStatus(t("analyzing"), "loading");
     else if (status.dataset.kind === "success" && summary.textContent === t("noSummary")) setStatus(t("analysisComplete"), "success");
-    localStorage.setItem("webmind-language", currentLanguage);
+    try {
+      localStorage.setItem("webmind-language", currentLanguage);
+    } catch {
+      // Language persistence is optional; keep the page usable when storage is blocked.
+    }
     window.__webmindLanguage = language;
   }
 
@@ -422,7 +648,12 @@
   }
 
   function detectLanguage() {
-    const stored = localStorage.getItem("webmind-language");
+    let stored = null;
+    try {
+      stored = localStorage.getItem("webmind-language");
+    } catch {
+      stored = null;
+    }
     if (stored && COPY[stored]) {
       return stored;
     }

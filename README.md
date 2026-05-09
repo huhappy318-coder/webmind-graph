@@ -1,196 +1,133 @@
 # WebMind Graph
 <img width="2995" height="1689" alt="image" src="https://github.com/user-attachments/assets/26137f31-9546-4e17-8782-00ef1ec4bb21" />
 
-WebMind Graph 目前已经整理成适合直接上传 GitHub，并由 Cloudflare 直接导入托管的版本。
+WebMind Graph 是一个轻量级网页文章知识图谱演示项目。用户可以输入多个 URL，或直接粘贴文章文本，系统会抓取/读取内容，使用 mock 或已配置的 AI Provider 生成概念、关键词、实体和关系，并在前端渲染为可交互的知识图谱。
 
-当前主部署路线是：
+当前版本的主部署目标是 **Cloudflare Pages + Pages Functions**。它不需要你手动维护 Python 服务，也不依赖 Docker 在线运行。
 
-- Cloudflare Workers
-- Cloudflare Static Assets
-- 前端和 API 同源部署
-- 默认使用 `mock` 模式
-- 已支持通过环境变量启用 `DeepSeek`
-- 不依赖真实 AI API key
+## 核心功能
 
-## 当前版本能做什么
+- 输入多个文章 URL，每行一个
+- 支持手动粘贴正文文本
+- 默认 mock 模式可直接运行，不需要 API Key
+- 有 `DEEPSEEK_API_KEY` 时自动启用 DeepSeek 模型
+- 返回稳定的 graph JSON：nodes、links、metadata
+- 前端使用 D3 渲染力导向知识图谱
+- 支持中英双语界面
+- 支持本地保存输入和上次分析结果
+- 支持复制摘要、导出 JSON、清空本地数据
+- 支持 Cloudflare Pages 同源 API：
+  - `GET /api/available-models`
+  - `GET /api/active-model`
+  - `POST /api/crawl`
+  - `POST /api/analyze`
 
-这个版本已经支持：
+## 技术栈
 
-- 访问 `/` 直接打开前端页面
-- 输入一个或多个文章 URL
-- 粘贴手动文本内容
-- 使用 mock 模式进行分析
-- 通过 `/api/analyze` 返回图谱 JSON
-- 在浏览器中渲染 D3 知识图谱
-- 通过 `/api/crawl` 测试抓取单个 URL
-- 通过 `/api/available-models` 和 `/api/active-model` 获取模型信息
+- 前端：原生 HTML / CSS / JavaScript
+- 图谱：D3.js
+- 云端 API：Cloudflare Pages Functions
+- 可选 Worker 入口：Cloudflare Workers
+- 构建：Node.js 脚本复制静态资源到 `dist`
 
-## 当前适合的部署方式
-
-这个仓库现在是 **Cloudflare 优先** 的结构，不再以 Docker 或 Python 常驻服务作为线上主入口。
+## 项目结构
 
 ```text
 webmind-graph/
-  src/
-    worker.js
-    webmind.js
-  frontend/
-    index.html
-    graph.js
-    panel.js
-    websocket.js
-    style.css
-  tests/
-    worker.test.mjs
-  wrangler.toml
+  frontend/              # 前端静态页面和脚本
+  functions/api/         # Cloudflare Pages Functions API 路由
+  scripts/               # 构建脚本
+  src/                   # 共享业务逻辑和 Worker 入口
+  tests/                 # Node 测试
   package.json
-  .dev.vars.example
+  wrangler.toml          # 可选 Worker 部署配置
+  .dev.vars.example      # 本地/Cloudflare 环境变量示例
 ```
 
-## 核心文件说明
+## 本地运行
 
-- `src/worker.js`
-  Cloudflare Worker 入口文件，负责处理 `/api/*` 请求，以及回退到静态资源。
-
-- `src/webmind.js`
-  核心业务逻辑，包括：
-  - URL 抓取
-  - mock 抽取
-  - DeepSeek 抽取
-  - 图谱生成
-  - 图谱融合
-  - analyze 响应结构生成
-
-- `frontend/`
-  前端静态资源目录，会由 Cloudflare 直接托管。
-
-- `wrangler.toml`
-  Cloudflare Workers 配置文件，包含 Worker 入口、兼容日期、静态资源目录等信息。
-
-## 本地预览方法
-
-### 1. 安装依赖
+安装依赖：
 
 ```bash
 npm install
 ```
 
-### 2. 可选：复制本地变量文件
-
-Windows:
+构建静态文件：
 
 ```bash
-copy .dev.vars.example .dev.vars
+npm run build
 ```
 
-macOS / Linux:
-
-```bash
-cp .dev.vars.example .dev.vars
-```
-
-### 3. 本地启动 Cloudflare Worker 预览
+本地预览 Pages + Functions：
 
 ```bash
 npm run dev
 ```
 
-### 4. 打开本地地址
+`npm run dev` 会先构建 `dist`，再通过 Wrangler 启动 Cloudflare Pages 本地预览。首次运行时，`npx` 可能会下载 Wrangler。
 
-Wrangler 一般会输出一个本地地址，通常是：
-
-[http://localhost:8787](http://localhost:8787)
-
-## 部署到 Cloudflare
-
-这个仓库的目标就是：
-
-> 上传 GitHub
-> 在 Cloudflare 中导入仓库
-> 直接部署
-
-### Cloudflare 面板里要注意的两件事
-
-1. 选择 **Workers**，不要选 **Pages**
-   - 当前仓库是 `wrangler.toml + src/worker.js + frontend/` 的 Worker 结构
-   - 如果部署成 Pages，通常会出现 `pages.dev` 根路径 404，或者前端能出但 API 结构不对
-
-2. Root directory 要指向仓库根目录
-   - 当前应填写 `.`
-   - 不需要额外的 build output 目录
-   - 静态资源目录已经在 `wrangler.toml` 里声明为 `frontend/`
-
-### 仓库中已经包含的部署文件
-
-- `wrangler.toml`
-- `package.json`
-- `src/worker.js`
-- `frontend/`
-
-### 当前可选环境变量
-
-目前推荐这几个变量：
-
-- `ACTIVE_MODEL=mock`
-- `DEEPSEEK_API_KEY=你的 DeepSeek Key`
-- `DEEPSEEK_MODEL=deepseek-chat`
-
-说明：
-
-- 不配置任何 secret 时，系统会继续使用 `mock`
-- 配置 `DEEPSEEK_API_KEY` 后，前端下拉框会自动启用 `DeepSeek`
-- 如果你还希望默认直接使用 DeepSeek，可以把 `ACTIVE_MODEL` 设为 `deepseek`
-- 其他模型当前仍会读取配置状态，但托管版 demo 只真正接通了 `mock` 和 `DeepSeek`
-
-## API 列表
-
-当前版本保留这些接口能力：
-
-- `GET /`
-- `GET /api/health`
-- `GET /api/available-models`
-- `GET /api/active-model`
-- `POST /api/crawl`
-- `POST /api/analyze`
-
-## 本地测试
-
-当前推荐运行 Worker 侧测试：
+## 测试
 
 ```bash
 npm test
 ```
 
+当前测试覆盖 Worker/API 的核心路径，包括模型列表、active model、manual text analyze、URL analyze、crawl 失败兜底和 DeepSeek 环境变量开关。
+
+## 部署到 Cloudflare Pages
+
+在 Cloudflare 面板中选择 **Workers & Pages → Pages → Connect to Git**，连接这个 GitHub 仓库。
+
+推荐配置：
+
+```text
+Framework preset: None
+Root directory: .
+Build command: npm run build
+Build output directory: dist
+Node.js version: 20
+Functions directory: functions
+```
+
+环境变量可以先全部留空，项目会使用 mock 模式正常运行。
+
+可选变量：
+
+```text
+ACTIVE_MODEL=mock
+DEEPSEEK_API_KEY=你的 DeepSeek API Key
+DEEPSEEK_MODEL=deepseek-chat
+```
+
+说明：
+
+- 不配置任何 Key：只启用 mock 模型，适合公开演示。
+- 配置 `DEEPSEEK_API_KEY`：前端模型下拉框会启用 DeepSeek。
+- 如果希望默认使用 DeepSeek，可设置 `ACTIVE_MODEL=deepseek`。
+- 不要把真实 API Key 写进前端代码或 README，应放在 Cloudflare 的环境变量/Secret 中。
+
+## 可选 Worker 部署
+
+项目仍保留 `src/worker.js` 和 `wrangler.toml`，用于 Workers + Static Assets 方案：
+
+```bash
+npm run worker:dev
+npm run worker:deploy
+```
+
+但当前推荐线上主方案是 Cloudflare Pages。
+
 ## 当前限制
 
-- URL 抓取是轻量规则方案，对强反爬、纯 JavaScript 页面、登录墙页面不一定稳定
-- mock 抽取是规则法，不是真正的大模型语义理解
-- D3 仍然通过 CDN 加载
-- 仓库里还保留了旧的 Python / FastAPI / Docker 文件，主要用于历史兼容或本地参考，但已经不是云端主部署路径
-- 为了避免 Cloudflare 自动把仓库识别成 Python 主项目，根目录已经不再保留 `requirements.txt`
+- mock 模型是规则抽取，不等同于真实大模型语义理解。
+- URL 抓取依赖 Cloudflare `fetch`，对登录页、强反爬页面、纯 JavaScript 渲染页面可能只能返回降级结果。
+- D3 通过 CDN 加载；如果访问环境阻断 CDN，图谱区域可能无法渲染。
+- 当前只完整接入了 mock 和 DeepSeek；OpenAI、Claude、Gemini、Qwen、Kimi 仍是环境变量驱动的“待接入”状态。
 
-## 关于旧文件
+## 后续优化方向
 
-仓库中仍然保留一些旧的本地开发遗留文件，例如：
-
-- `backend/`
-- `Dockerfile`
-- `docker-compose.yml`
-- `requirements.legacy.txt`
-- `test_*.py`
-
-这些文件现在不再是 Cloudflare 托管主方案的一部分。
-
-如果你的目标是：
-
-> GitHub 上传
-> Cloudflare 直接导入
-> 在线演示
-
-那么应该以以下内容为准：
-
-- `src/worker.js`
-- `src/webmind.js`
-- `frontend/`
-- `wrangler.toml`
-- `package.json`
+- 接入更多真实 AI Provider
+- 增加图谱 PNG/SVG 导出
+- 增加文章对比视图和节点筛选
+- 增加更完整的端到端测试
+- 将 D3 资源本地化，减少 CDN 依赖
