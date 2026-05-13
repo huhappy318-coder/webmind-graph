@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="WebMind Graph turns URLs or pasted article text into a lightweight knowledge graph.">
   <title>WebMind Graph</title>
   <link rel="stylesheet" href="/style.css">
 </head>
@@ -11,97 +12,93 @@
     <header class="topbar">
       <div>
         <h1>WebMind Graph</h1>
-        <p id="heroText">对比 URL 或粘贴文本，查看轻量级文章知识图谱。 / Compare URLs or pasted text and inspect a lightweight article knowledge graph.</p>
+        <p id="heroText">对比 URL 或粘贴文本，生成轻量级文章知识图谱。</p>
         <div class="workflow-chips">
-          <span>1. 输入内容</span>
-          <span>2. 选择模型</span>
-          <span>3. 生成图谱</span>
+          <span id="stepOne">1. 输入内容</span>
+          <span id="stepTwo">2. 选择模型</span>
+          <span id="stepThree">3. 生成图谱</span>
         </div>
       </div>
       <div class="topbar-actions">
         <label class="field compact field-language">
-          <span id="languageLabel">语言 / Language</span>
-          <select id="languageSelector">
+          <span id="languageLabel">语言</span>
+          <select id="languageSelector" aria-label="Language">
             <option value="bilingual">中文 + English</option>
             <option value="zh">中文</option>
             <option value="en">English</option>
           </select>
         </label>
         <label class="field compact">
-          <span id="modelLabel">模型 / Model</span>
-          <select id="modelSelector"></select>
+          <span id="modelLabel">模型</span>
+          <select id="modelSelector" aria-label="Model"></select>
         </label>
         <div id="modelHelp" class="model-help muted"></div>
       </div>
     </header>
 
     <main class="layout">
-      <section class="panel input-panel">
+      <section class="panel input-panel" aria-labelledby="inputTitle">
         <div class="section-head">
-          <h2 id="inputTitle">输入 / Input</h2>
-          <div id="status" class="status">就绪 / Ready</div>
+          <h2 id="inputTitle">输入</h2>
+          <div id="status" class="status">就绪</div>
         </div>
 
         <label class="field">
-          <span id="urlsLabel">URL（每行一个） / URLs (one per line)</span>
-          <textarea
-            id="urlInput"
-            rows="8"
-            placeholder="在这里粘贴一个或多个文章链接。示例：&#10;https://example.com&#10;https://www.python.org/about/&#10;&#10;Paste one or more article URLs here."
-          ></textarea>
+          <span id="urlsLabel">URL（每行一个）</span>
+          <textarea id="urlInput" rows="8"></textarea>
         </label>
 
         <label class="field">
-          <span id="manualTextLabel">手动文本 / Manual text</span>
-          <textarea
-            id="manualText"
-            rows="10"
-            placeholder="当网页抓取失败、页面依赖 JavaScript 渲染，或你只想快速演示时，可直接粘贴正文。&#10;&#10;Paste article text here when scraping is blocked or you want a quick demo."
-          ></textarea>
+          <span id="manualTextLabel">手动文本</span>
+          <textarea id="manualText" rows="10"></textarea>
         </label>
 
         <div class="button-row">
-          <button id="analyzeButton" class="primary">开始分析 / Start Analysis</button>
-          <button id="crawlButton" class="secondary">抓取测试 / Test Crawl</button>
-          <button id="sampleButton" class="secondary">填入示例 / Example</button>
+          <button id="analyzeButton" class="primary">开始分析</button>
+          <button id="crawlButton" class="secondary">抓取测试</button>
+          <button id="sampleButton" class="secondary">填入示例</button>
         </div>
 
         <div class="button-row compact-actions">
-          <button id="copyButton" class="ghost">复制摘要 / Copy</button>
-          <button id="exportButton" class="ghost">导出 JSON / Export</button>
-          <button id="clearButton" class="ghost danger">清空 / Clear</button>
+          <button id="copyButton" class="ghost">复制摘要</button>
+          <button id="exportButton" class="ghost">导出 JSON</button>
+          <button id="clearButton" class="ghost danger">清空</button>
         </div>
 
         <div id="errorBox" class="message error-box hidden" role="alert"></div>
 
-        <section class="summary-block">
-          <h2 id="summaryTitle">运行摘要 / Run Summary</h2>
+        <section class="summary-block" aria-labelledby="summaryTitle">
+          <h2 id="summaryTitle">运行摘要</h2>
           <div id="statsGrid" class="stats-grid">
-            <div class="stat-card"><span id="statArticlesLabel">总数 / Total</span><strong id="statArticles">0</strong></div>
-            <div class="stat-card"><span id="statSuccessLabel">成功 / Success</span><strong id="statSuccess">0</strong></div>
-            <div class="stat-card"><span id="statFailedLabel">失败 / Failed</span><strong id="statFailed">0</strong></div>
-            <div class="stat-card"><span id="statNodesLabel">节点 / Nodes</span><strong id="statNodes">0</strong></div>
-            <div class="stat-card"><span id="statLinksLabel">连线 / Links</span><strong id="statLinks">0</strong></div>
-            <div class="stat-card"><span id="statModelLabel">模型 / Model</span><strong id="statModel">mock</strong></div>
+            <div class="stat-card"><span id="statArticlesLabel">总数</span><strong id="statArticles">0</strong></div>
+            <div class="stat-card"><span id="statSuccessLabel">成功</span><strong id="statSuccess">0</strong></div>
+            <div class="stat-card"><span id="statFailedLabel">失败</span><strong id="statFailed">0</strong></div>
+            <div class="stat-card"><span id="statNodesLabel">节点</span><strong id="statNodes">0</strong></div>
+            <div class="stat-card"><span id="statLinksLabel">连线</span><strong id="statLinks">0</strong></div>
+            <div class="stat-card"><span id="statModelLabel">模型</span><strong id="statModel">mock</strong></div>
           </div>
-          <div id="summary" class="summary-content">还没有分析结果。 / No analysis yet.</div>
+          <div id="summary" class="summary-content">还没有分析结果。</div>
         </section>
 
-        <section class="summary-block">
-          <h2 id="articlesTitle">文章列表 / Articles</h2>
+        <section class="summary-block" aria-labelledby="articlesTitle">
+          <h2 id="articlesTitle">文章列表</h2>
           <div id="articles" class="article-list"></div>
         </section>
       </section>
 
-      <section class="panel graph-panel">
+      <section class="panel graph-panel" aria-labelledby="graphTitle">
         <div class="section-head">
-          <h2 id="graphTitle">知识图谱 / Knowledge Graph</h2>
+          <h2 id="graphTitle">知识图谱</h2>
           <div id="graphMeta" class="meta"></div>
         </div>
         <div id="graphLegend" class="graph-legend"></div>
         <div id="graphContainer" class="graph-container"></div>
       </section>
     </main>
+
+    <footer class="app-footer">
+      <span id="footerNote">演示版默认使用 mock 模型；配置 DeepSeek API Key 后可切换真实模型。</span>
+    </footer>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>

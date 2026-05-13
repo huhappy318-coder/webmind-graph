@@ -1,15 +1,19 @@
 (function () {
   const COPY = {
     bilingual: {
-      heroText: "对比 URL 或粘贴文本，查看轻量级文章知识图谱。 / Compare URLs or pasted text and inspect a lightweight article knowledge graph.",
+      heroText: "对比 URL 或粘贴文本，生成轻量级文章知识图谱。 / Compare URLs or pasted text and inspect a lightweight article knowledge graph.",
+      stepOne: "1. 输入内容 / Input",
+      stepTwo: "2. 选择模型 / Model",
+      stepThree: "3. 生成图谱 / Graph",
       languageLabel: "语言 / Language",
       modelLabel: "模型 / Model",
-      modelHelpSingle: "当前线上演示版仅启用模拟模型，其他模型会在接入真实 Provider 后开放。 / Only the mock model is available in the hosted demo right now.",
-      modelHelpMulti: "可切换已启用模型，未启用项会标记为即将支持。 / Switch between enabled models. Disabled items are marked as coming soon.",
-      comingSoonSuffix: "（即将支持） / (Coming soon)",
+      modelHelpSingle: "当前演示可直接使用模拟模型。配置真实 API Key 后，对应模型会自动启用。 / The hosted demo always works with mock mode. Models unlock when API keys are configured.",
+      modelHelpMulti: "可切换已启用模型；未启用项会标记为即将支持。 / Switch enabled models. Disabled items are marked as coming soon.",
+      comingSoonSuffix: "（未启用） / (not enabled)",
       copied: "已复制摘要 / Summary copied",
       copyFailed: "复制失败，请手动选择文本复制。 / Copy failed. Select the text manually.",
       exported: "已导出 JSON / JSON exported",
+      exportEmpty: "还没有分析结果，将导出当前输入。 / No result yet; exporting current input.",
       cleared: "已清空本地数据 / Local data cleared",
       sampleLoaded: "已填入示例 / Example loaded",
       sampleButton: "填入示例 / Example",
@@ -20,10 +24,10 @@
       ready: "就绪 / Ready",
       waitingInput: "等待输入 / Waiting for input",
       analyzing: "正在分析 / Analyzing sources...",
-      analyzingSummary: "正在处理内容并构建图谱…… / Working through the provided content and building a graph...",
+      analyzingSummary: "正在处理内容并构建图谱... / Working through the content and building a graph...",
       analysisComplete: "分析完成 / Analysis complete",
-      analysisPartial: "部分结果已返回 / Partial results returned",
-      analysisNoGraph: "分析完成，但没有生成图谱 / Analysis finished, but no graph data was created",
+      analysisPartial: "已返回部分结果 / Partial results returned",
+      analysisNoGraph: "分析完成，但没有生成图谱数据 / Analysis finished, but no graph data was created",
       analysisFailed: "分析失败 / Analysis failed",
       crawlWaiting: "等待 URL / Waiting for URL",
       crawlLoading: "抓取测试中 / Testing crawl...",
@@ -35,15 +39,18 @@
       manualTextLabel: "手动文本 / Manual text",
       manualTextPlaceholder: "当网页抓取失败、页面依赖 JavaScript 渲染，或你只想快速演示时，可直接粘贴正文。\n\nPaste article text here when scraping is blocked or you want a quick demo.",
       analyzeButton: "开始分析 / Start Analysis",
-      analyzeBusy: "分析中… / Analyzing...",
+      analyzeBusy: "分析中... / Analyzing...",
       crawlButton: "抓取测试 / Test Crawl",
       summaryTitle: "运行摘要 / Run Summary",
       summaryEmpty: "还没有分析结果。 / No analysis yet.",
       articlesTitle: "文章列表 / Articles",
       articlesEmpty: "还没有文章详情。 / No article details yet.",
       graphTitle: "知识图谱 / Knowledge Graph",
+      footerNote: "演示版默认使用 mock 模型；配置 DeepSeek API Key 后可切换真实模型。 / The demo uses mock mode by default; add a DeepSeek API key to enable a real model.",
       needInputError: "请至少输入一个 URL 或一段手动文本后再开始分析。 / Please add at least one URL or some manual text before starting analysis.",
+      shortInputWarning: "输入内容较短，图谱可能比较简单。 / The input is short; the graph may be simple.",
       needUrlError: "请先输入至少一个 URL 再测试抓取。 / Add at least one URL first to test crawling.",
+      invalidUrls: "已忽略无效 URL： / Ignored invalid URLs: ",
       noSummary: "暂无摘要。 / No summary available.",
       noSummaryReturned: "接口未返回摘要。 / No summary returned.",
       apiFallback: "模型列表加载失败，已切换到本地模拟模型。 / Model list failed; using local mock model.",
@@ -57,18 +64,28 @@
       sourceUrl: "链接 / URL",
       sourceManual: "手动 / Manual",
       articleStatusOk: "成功 / ok",
-      articleStatusFailed: "失败 / failed"
+      articleStatusFailed: "失败 / failed",
+      statTotal: "总数 / Total",
+      statSuccess: "成功 / Success",
+      statFailed: "失败 / Failed",
+      statNodes: "节点 / Nodes",
+      statLinks: "连线 / Links",
+      statModel: "模型 / Model",
     },
     zh: {
-      heroText: "对比 URL 或粘贴文本，查看轻量级文章知识图谱。",
+      heroText: "对比 URL 或粘贴文本，生成轻量级文章知识图谱。",
+      stepOne: "1. 输入内容",
+      stepTwo: "2. 选择模型",
+      stepThree: "3. 生成图谱",
       languageLabel: "语言",
       modelLabel: "模型",
-      modelHelpSingle: "当前线上演示版仅启用模拟模型，其他模型会在接入真实 Provider 后开放。",
-      modelHelpMulti: "可切换已启用模型，未启用项会标记为即将支持。",
-      comingSoonSuffix: "（即将支持）",
+      modelHelpSingle: "当前演示可直接使用模拟模型。配置真实 API Key 后，对应模型会自动启用。",
+      modelHelpMulti: "可切换已启用模型；未启用项会标记为即将支持。",
+      comingSoonSuffix: "（未启用）",
       copied: "已复制摘要",
       copyFailed: "复制失败，请手动选择文本复制。",
       exported: "已导出 JSON",
+      exportEmpty: "还没有分析结果，将导出当前输入。",
       cleared: "已清空本地数据",
       sampleLoaded: "已填入示例",
       sampleButton: "填入示例",
@@ -79,10 +96,10 @@
       ready: "就绪",
       waitingInput: "等待输入",
       analyzing: "正在分析",
-      analyzingSummary: "正在处理内容并构建图谱……",
+      analyzingSummary: "正在处理内容并构建图谱...",
       analysisComplete: "分析完成",
       analysisPartial: "已返回部分结果",
-      analysisNoGraph: "分析完成，但没有生成图谱",
+      analysisNoGraph: "分析完成，但没有生成图谱数据",
       analysisFailed: "分析失败",
       crawlWaiting: "等待 URL",
       crawlLoading: "抓取测试中",
@@ -94,15 +111,18 @@
       manualTextLabel: "手动文本",
       manualTextPlaceholder: "当网页抓取失败、页面依赖 JavaScript 渲染，或你只想快速演示时，可直接粘贴正文。",
       analyzeButton: "开始分析",
-      analyzeBusy: "分析中…",
+      analyzeBusy: "分析中...",
       crawlButton: "抓取测试",
       summaryTitle: "运行摘要",
       summaryEmpty: "还没有分析结果。",
       articlesTitle: "文章列表",
       articlesEmpty: "还没有文章详情。",
       graphTitle: "知识图谱",
+      footerNote: "演示版默认使用 mock 模型；配置 DeepSeek API Key 后可切换真实模型。",
       needInputError: "请至少输入一个 URL 或一段手动文本后再开始分析。",
+      shortInputWarning: "输入内容较短，图谱可能比较简单。",
       needUrlError: "请先输入至少一个 URL 再测试抓取。",
+      invalidUrls: "已忽略无效 URL：",
       noSummary: "暂无摘要。",
       noSummaryReturned: "接口未返回摘要。",
       apiFallback: "模型列表加载失败，已切换到本地模拟模型。",
@@ -116,18 +136,28 @@
       sourceUrl: "链接",
       sourceManual: "手动",
       articleStatusOk: "成功",
-      articleStatusFailed: "失败"
+      articleStatusFailed: "失败",
+      statTotal: "总数",
+      statSuccess: "成功",
+      statFailed: "失败",
+      statNodes: "节点",
+      statLinks: "连线",
+      statModel: "模型",
     },
     en: {
       heroText: "Compare URLs or pasted text and inspect a lightweight article knowledge graph.",
+      stepOne: "1. Input",
+      stepTwo: "2. Model",
+      stepThree: "3. Graph",
       languageLabel: "Language",
       modelLabel: "Model",
-      modelHelpSingle: "Only the mock model is enabled in the hosted demo right now. Other models will be unlocked after real provider integration.",
-      modelHelpMulti: "Switch between enabled models. Disabled items are marked as coming soon.",
-      comingSoonSuffix: "(Coming soon)",
+      modelHelpSingle: "The hosted demo always works with mock mode. Models unlock when API keys are configured.",
+      modelHelpMulti: "Switch enabled models. Disabled items are marked as coming soon.",
+      comingSoonSuffix: "(not enabled)",
       copied: "Summary copied",
       copyFailed: "Copy failed. Select the text manually.",
       exported: "JSON exported",
+      exportEmpty: "No result yet; exporting current input.",
       cleared: "Local data cleared",
       sampleLoaded: "Example loaded",
       sampleButton: "Example",
@@ -138,7 +168,7 @@
       ready: "Ready",
       waitingInput: "Waiting for input",
       analyzing: "Analyzing sources...",
-      analyzingSummary: "Working through the provided content and building a graph...",
+      analyzingSummary: "Working through the content and building a graph...",
       analysisComplete: "Analysis complete",
       analysisPartial: "Partial results returned",
       analysisNoGraph: "Analysis finished, but no graph data was created",
@@ -151,7 +181,7 @@
       urlsLabel: "URLs (one per line)",
       urlsPlaceholder: "Paste one or more article URLs here.\nExample:\nhttps://example.com\nhttps://www.python.org/about/",
       manualTextLabel: "Manual text",
-      manualTextPlaceholder: "Paste article text here when scraping is blocked, the page needs JavaScript rendering, or you want a quick local demo.",
+      manualTextPlaceholder: "Paste article text here when scraping is blocked, the page needs JavaScript rendering, or you want a quick demo.",
       analyzeButton: "Start Analysis",
       analyzeBusy: "Analyzing...",
       crawlButton: "Test Crawl",
@@ -160,8 +190,11 @@
       articlesTitle: "Articles",
       articlesEmpty: "No article details yet.",
       graphTitle: "Knowledge Graph",
+      footerNote: "The demo uses mock mode by default; add a DeepSeek API key to enable a real model.",
       needInputError: "Please add at least one URL or some manual text before starting analysis.",
+      shortInputWarning: "The input is short; the graph may be simple.",
       needUrlError: "Add at least one URL first to test crawling.",
+      invalidUrls: "Ignored invalid URLs: ",
       noSummary: "No summary available.",
       noSummaryReturned: "No summary returned.",
       apiFallback: "Model list failed; using local mock model.",
@@ -175,33 +208,44 @@
       sourceUrl: "URL",
       sourceManual: "Manual",
       articleStatusOk: "ok",
-      articleStatusFailed: "failed"
-    }
+      articleStatusFailed: "failed",
+      statTotal: "Total",
+      statSuccess: "Success",
+      statFailed: "Failed",
+      statNodes: "Nodes",
+      statLinks: "Links",
+      statModel: "Model",
+    },
   };
 
-  const modelSelector = document.getElementById("modelSelector");
-  const modelHelp = document.getElementById("modelHelp");
-  const languageSelector = document.getElementById("languageSelector");
-  const urlInput = document.getElementById("urlInput");
-  const manualText = document.getElementById("manualText");
-  const summary = document.getElementById("summary");
-  const articles = document.getElementById("articles");
-  const status = document.getElementById("status");
-  const errorBox = document.getElementById("errorBox");
-  const analyzeButton = document.getElementById("analyzeButton");
-  const crawlButton = document.getElementById("crawlButton");
-  const sampleButton = document.getElementById("sampleButton");
-  const copyButton = document.getElementById("copyButton");
-  const exportButton = document.getElementById("exportButton");
-  const clearButton = document.getElementById("clearButton");
-  const statArticles = document.getElementById("statArticles");
-  const statSuccess = document.getElementById("statSuccess");
-  const statFailed = document.getElementById("statFailed");
-  const statNodes = document.getElementById("statNodes");
-  const statLinks = document.getElementById("statLinks");
-  const statModel = document.getElementById("statModel");
+  const $ = (id) => document.getElementById(id);
+  const modelSelector = $("modelSelector");
+  const modelHelp = $("modelHelp");
+  const languageSelector = $("languageSelector");
+  const urlInput = $("urlInput");
+  const manualText = $("manualText");
+  const summary = $("summary");
+  const articles = $("articles");
+  const status = $("status");
+  const errorBox = $("errorBox");
+  const analyzeButton = $("analyzeButton");
+  const crawlButton = $("crawlButton");
+  const sampleButton = $("sampleButton");
+  const copyButton = $("copyButton");
+  const exportButton = $("exportButton");
+  const clearButton = $("clearButton");
+  const statArticles = $("statArticles");
+  const statSuccess = $("statSuccess");
+  const statFailed = $("statFailed");
+  const statNodes = $("statNodes");
+  const statLinks = $("statLinks");
+  const statModel = $("statModel");
+
   const STORAGE_KEY = "webmind-graph-state-v1";
+  const LANGUAGE_KEY = "webmind-language";
+  const MAX_MANUAL_TEXT = 30000;
   let currentLanguage = detectLanguage();
+  let busy = false;
 
   async function init() {
     languageSelector.value = currentLanguage;
@@ -210,7 +254,7 @@
     bindEvents();
     if (!restoreState()) {
       resetDashboard();
-      window.renderGraph({ nodes: [], links: [], metadata: {} });
+      window.renderGraph?.({ nodes: [], links: [], metadata: {} });
     }
   }
 
@@ -218,9 +262,7 @@
     let data;
     try {
       const response = await fetch("/api/available-models");
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       data = await response.json();
     } catch (error) {
       data = {
@@ -234,18 +276,20 @@
       };
       setStatus(`${t("apiFallback")} ${error.message || ""}`.trim(), "warning");
     }
-    const models = data.models || [];
+
+    const models = Array.isArray(data.models) ? data.models : [];
     modelSelector.innerHTML = "";
-    models.forEach(model => {
+    models.forEach((model) => {
       const option = document.createElement("option");
       option.value = model.name;
       option.textContent = model.available_for_use
         ? model.display_name
         : `${model.display_name} ${t("comingSoonSuffix")}`.trim();
       option.disabled = !model.available_for_use;
-      option.selected = model.default;
+      option.selected = Boolean(model.default);
       modelSelector.appendChild(option);
     });
+
     const activeModel = models.find((item) => item.available_for_use && item.default)
       || models.find((item) => item.available_for_use)
       || models.find((item) => item.name === "mock");
@@ -262,25 +306,32 @@
     copyButton.addEventListener("click", copySummary);
     exportButton.addEventListener("click", exportJson);
     clearButton.addEventListener("click", clearLocalData);
-    urlInput.addEventListener("input", saveDraft);
-    manualText.addEventListener("input", saveDraft);
+    urlInput.addEventListener("input", debounce(saveDraft, 250));
+    manualText.addEventListener("input", debounce(saveDraft, 250));
     modelSelector.addEventListener("change", saveDraft);
     languageSelector.addEventListener("change", () => {
       currentLanguage = languageSelector.value || "bilingual";
       applyLanguage();
       renderArticles(getCurrentArticles());
-      window.renderGraph(window.__lastGraphData || { nodes: [], links: [], metadata: {} });
+      window.renderGraph?.(window.__lastGraphData || { nodes: [], links: [], metadata: {} });
       saveDraft();
     });
   }
 
   async function analyze() {
+    if (busy) return;
     const payload = buildPayload();
     clearError();
     if (!payload.urls.length && !payload.manual_text.trim()) {
       showError(t("needInputError"));
       setStatus(t("waitingInput"), "warning");
       return;
+    }
+    if (payload.manual_text.trim() && payload.manual_text.trim().length < 20 && !payload.urls.length) {
+      setStatus(t("shortInputWarning"), "warning");
+    }
+    if (payload.invalid_urls.length) {
+      showError(`${t("invalidUrls")}${payload.invalid_urls.join(", ")}`);
     }
 
     setBusy(true);
@@ -291,20 +342,20 @@
       const response = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ urls: payload.urls, manual_text: payload.manual_text, model: payload.model }),
       });
       const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.detail || t("analyzeRequestFailed"));
-      }
+      if (!response.ok) throw new Error(data.detail || t("analyzeRequestFailed"));
+
       window.__lastGraphData = data.graph || { nodes: [], links: [], metadata: {} };
       window.__lastArticles = data.articles || [];
       window.__lastResult = data;
       summary.textContent = data.summary || t("noSummaryReturned");
-      renderArticles(data.articles || []);
+      renderArticles(window.__lastArticles);
       updateStats(data.metadata || {}, data.model || "mock");
-      window.renderGraph(data.graph);
-      if (!data.graph || !data.graph.nodes || !data.graph.nodes.length) {
+      window.renderGraph?.(window.__lastGraphData);
+
+      if (!window.__lastGraphData.nodes || !window.__lastGraphData.nodes.length) {
         setStatus(t("analysisNoGraph"), "warning");
       } else {
         setStatus(data.success ? t("analysisComplete") : t("analysisPartial"), data.success ? "success" : "warning");
@@ -312,8 +363,7 @@
       saveDraft();
     } catch (error) {
       resetDashboard();
-      renderArticles([]);
-      window.renderGraph({ nodes: [], links: [], metadata: {} });
+      window.renderGraph?.({ nodes: [], links: [], metadata: {} });
       summary.textContent = t("noSummary");
       showError(error.message || String(error));
       setStatus(t("analysisFailed"), "error");
@@ -323,9 +373,10 @@
   }
 
   async function crawlFirstUrl() {
-    const urls = parseUrls(urlInput.value);
+    if (busy) return;
+    const payload = buildPayload();
     clearError();
-    if (!urls.length) {
+    if (!payload.urls.length) {
       showError(t("needUrlError"));
       setStatus(t("crawlWaiting"), "warning");
       return;
@@ -337,17 +388,16 @@
       const response = await fetch("/api/crawl", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: urls[0] }),
+        body: JSON.stringify({ url: payload.urls[0] }),
       });
       const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.detail || t("crawlRequestFailed"));
-      }
+      if (!response.ok) throw new Error(data.detail || t("crawlRequestFailed"));
+
       window.__lastArticles = [data];
       window.__lastGraphData = { nodes: [], links: [], metadata: {} };
       window.__lastResult = {
         success: data.success,
-        model: modelSelector.value || "mock",
+        model: payload.model,
         articles: [data],
         graph: window.__lastGraphData,
         summary: data.summary || "",
@@ -357,22 +407,15 @@
           failed_count: data.success ? 0 : 1,
           node_count: 0,
           link_count: 0,
-          model: modelSelector.value || "mock"
-        }
+          model: payload.model,
+        },
       };
+
       summary.textContent = data.summary || t("noSummaryReturned");
       renderArticles(window.__lastArticles);
-      updateStats({
-        article_count: 1,
-        success_count: data.success ? 1 : 0,
-        failed_count: data.success ? 0 : 1,
-        node_count: 0,
-        link_count: 0,
-      }, modelSelector.value || "mock");
-      window.renderGraph({ nodes: [], links: [], metadata: {} });
-      if (!data.success && data.error) {
-        showError(data.error);
-      }
+      updateStats(window.__lastResult.metadata, payload.model);
+      window.renderGraph?.(window.__lastGraphData);
+      if (!data.success && data.error) showError(data.error);
       setStatus(data.success ? t("crawlSuccess") : t("crawlFallback"), data.success ? "success" : "warning");
       saveDraft();
     } catch (error) {
@@ -384,9 +427,14 @@
   }
 
   function buildPayload() {
+    const parsed = parseUrls(urlInput.value);
+    const text = manualText.value.length > MAX_MANUAL_TEXT
+      ? manualText.value.slice(0, MAX_MANUAL_TEXT)
+      : manualText.value;
     return {
-      urls: parseUrls(urlInput.value),
-      manual_text: manualText.value,
+      urls: parsed.valid,
+      invalid_urls: parsed.invalid,
+      manual_text: text,
       model: modelSelector.value || "mock",
     };
   }
@@ -397,7 +445,7 @@
       articles.innerHTML = `<div class="article-card muted">${escapeHtml(t("articlesEmpty"))}</div>`;
       return;
     }
-    items.forEach(item => {
+    items.forEach((item) => {
       const card = document.createElement("article");
       card.className = `article-card ${item.success ? "" : "article-card-failed"}`.trim();
       const sourceType = item.source_type === "manual" ? t("sourceManual") : t("sourceUrl");
@@ -406,7 +454,7 @@
         <p>${escapeHtml(item.summary || "")}</p>
         <dl>
           <div><dt>${escapeHtml(t("sourceLabel"))}</dt><dd>${escapeHtml(sourceType)}</dd></div>
-          <div><dt>${escapeHtml(t("lengthLabel"))}</dt><dd>${item.content_length || 0}</dd></div>
+          <div><dt>${escapeHtml(t("lengthLabel"))}</dt><dd>${Number(item.content_length || 0).toLocaleString()}</dd></div>
           <div><dt>${escapeHtml(t("statusLabel"))}</dt><dd>${item.success ? escapeHtml(t("articleStatusOk")) : escapeHtml(t("articleStatusFailed"))}</dd></div>
         </dl>
         ${item.error ? `<div class="article-error">${escapeHtml(item.error)}</div>` : ""}
@@ -425,7 +473,7 @@
   }
 
   function resetDashboard() {
-    updateStats({ article_count: 0, success_count: 0, failed_count: 0, node_count: 0, link_count: 0 }, "mock");
+    updateStats({ article_count: 0, success_count: 0, failed_count: 0, node_count: 0, link_count: 0 }, modelSelector.value || "mock");
     window.__lastArticles = [];
     window.__lastGraphData = { nodes: [], links: [], metadata: {} };
     window.__lastResult = null;
@@ -439,8 +487,9 @@
     manualText.value = [
       "WebMind Graph helps readers compare multiple articles and turn dense text into a lightweight knowledge graph.",
       "The demo can extract concepts, keywords, entities, and relationships from pasted content.",
-      "Cloudflare Workers and Pages Functions make the project easy to deploy without a traditional server.",
-      "DeepSeek can be enabled with an environment variable, while mock mode keeps the demo usable without an API key."
+      "Cloudflare Pages Functions make the project easy to deploy without a traditional server.",
+      "DeepSeek can be enabled with an environment variable, while mock mode keeps the demo usable without an API key.",
+      "这个示例展示了中英文混合文本也可以生成基础图谱。"
     ].join(" ");
     saveDraft();
     clearError();
@@ -462,19 +511,24 @@
   }
 
   function exportJson() {
+    if (!window.__lastResult) {
+      setStatus(t("exportEmpty"), "warning");
+    }
     const data = {
       input: buildPayload(),
       result: window.__lastResult || null,
-      exported_at: new Date().toISOString()
+      exported_at: new Date().toISOString(),
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
     link.download = `webmind-graph-${Date.now()}.json`;
+    document.body.appendChild(link);
     link.click();
+    link.remove();
     URL.revokeObjectURL(url);
-    setStatus(t("exported"), "success");
+    if (window.__lastResult) setStatus(t("exported"), "success");
   }
 
   function clearLocalData() {
@@ -482,7 +536,7 @@
     urlInput.value = "";
     manualText.value = "";
     resetDashboard();
-    window.renderGraph({ nodes: [], links: [], metadata: {} });
+    window.renderGraph?.({ nodes: [], links: [], metadata: {} });
     setStatus(t("cleared"), "success");
   }
 
@@ -492,41 +546,39 @@
       manual_text: manualText.value,
       model: modelSelector.value || "mock",
       result: window.__lastResult || null,
-      saved_at: new Date().toISOString()
+      saved_at: new Date().toISOString(),
     });
   }
 
   function restoreState() {
     const state = safeStorageGet(STORAGE_KEY);
-    if (!state) {
-      return false;
-    }
-    urlInput.value = state.urls || "";
-    manualText.value = state.manual_text || "";
-    if (state.model && modelSelector.querySelector(`option[value="${state.model}"]:not(:disabled)`)) {
+    if (!state || typeof state !== "object") return false;
+
+    urlInput.value = typeof state.urls === "string" ? state.urls : "";
+    manualText.value = typeof state.manual_text === "string" ? state.manual_text : "";
+    if (state.model && modelSelector.querySelector(`option[value="${cssEscape(state.model)}"]:not(:disabled)`)) {
       modelSelector.value = state.model;
     }
-    if (!state.result) {
+    if (!state.result || typeof state.result !== "object") {
       resetDashboard();
       window.renderGraph?.({ nodes: [], links: [], metadata: {} });
       return Boolean(urlInput.value || manualText.value);
     }
+
     window.__lastResult = state.result;
-    window.__lastArticles = state.result.articles || [];
+    window.__lastArticles = Array.isArray(state.result.articles) ? state.result.articles : [];
     window.__lastGraphData = state.result.graph || { nodes: [], links: [], metadata: {} };
     summary.textContent = state.result.summary || t("summaryEmpty");
     renderArticles(window.__lastArticles);
     updateStats(state.result.metadata || {}, state.result.model || modelSelector.value || "mock");
-    window.renderGraph(window.__lastGraphData);
+    window.renderGraph?.(window.__lastGraphData);
     setStatus(t("ready"), "");
     return true;
   }
 
   function buildReportText() {
     const result = window.__lastResult;
-    if (!result) {
-      return summary.textContent || "";
-    }
+    if (!result) return summary.textContent || "";
     const meta = result.metadata || {};
     return [
       "WebMind Graph",
@@ -538,7 +590,7 @@
       `Success: ${meta.success_count ?? 0}`,
       `Failed: ${meta.failed_count ?? 0}`,
       `Nodes: ${meta.node_count ?? 0}`,
-      `Links: ${meta.link_count ?? 0}`
+      `Links: ${meta.link_count ?? 0}`,
     ].join("\n");
   }
 
@@ -568,13 +620,26 @@
   }
 
   function parseUrls(value) {
-    return value
+    const valid = [];
+    const invalid = [];
+    String(value || "")
       .split(/\r?\n/)
-      .map(line => line.trim())
-      .filter(Boolean);
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .forEach((line) => {
+        try {
+          const url = new URL(line);
+          if (url.protocol === "http:" || url.protocol === "https:") valid.push(url.href);
+          else invalid.push(line);
+        } catch {
+          invalid.push(line);
+        }
+      });
+    return { valid, invalid };
   }
 
   function setBusy(isBusy) {
+    busy = isBusy;
     analyzeButton.disabled = isBusy;
     crawlButton.disabled = isBusy;
     sampleButton.disabled = isBusy;
@@ -604,12 +669,15 @@
   function applyLanguage() {
     const language = currentLanguage;
     const setText = (id, text) => {
-      const element = document.getElementById(id);
+      const element = $(id);
       if (element) element.textContent = text;
     };
 
     document.documentElement.lang = language === "zh" ? "zh-CN" : "en";
     setText("heroText", t("heroText"));
+    setText("stepOne", t("stepOne"));
+    setText("stepTwo", t("stepTwo"));
+    setText("stepThree", t("stepThree"));
     setText("languageLabel", t("languageLabel"));
     setText("modelLabel", t("modelLabel"));
     modelHelp.textContent = modelSelector.disabled ? t("modelHelpSingle") : t("modelHelpMulti");
@@ -623,23 +691,18 @@
     setText("summaryTitle", t("summaryTitle"));
     setText("articlesTitle", t("articlesTitle"));
     setText("graphTitle", t("graphTitle"));
-    setText("statArticlesLabel", language === "zh" ? "总数" : language === "en" ? "Total" : "总数 / Total");
-    setText("statSuccessLabel", language === "zh" ? "成功" : language === "en" ? "Success" : "成功 / Success");
-    setText("statFailedLabel", language === "zh" ? "失败" : language === "en" ? "Failed" : "失败 / Failed");
-    setText("statNodesLabel", language === "zh" ? "节点" : language === "en" ? "Nodes" : "节点 / Nodes");
-    setText("statLinksLabel", language === "zh" ? "连线" : language === "en" ? "Links" : "连线 / Links");
-    setText("statModelLabel", language === "zh" ? "模型" : language === "en" ? "Model" : "模型 / Model");
+    setText("footerNote", t("footerNote"));
+    setText("statArticlesLabel", t("statTotal"));
+    setText("statSuccessLabel", t("statSuccess"));
+    setText("statFailedLabel", t("statFailed"));
+    setText("statNodesLabel", t("statNodes"));
+    setText("statLinksLabel", t("statLinks"));
+    setText("statModelLabel", t("statModel"));
     urlInput.placeholder = t("urlsPlaceholder");
     manualText.placeholder = t("manualTextPlaceholder");
-    setBusy(false);
+    setBusy(busy);
     if (!status.dataset.kind) setStatus(t("ready"), "");
-    else if (status.dataset.kind === "loading") setStatus(t("analyzing"), "loading");
-    else if (status.dataset.kind === "success" && summary.textContent === t("noSummary")) setStatus(t("analysisComplete"), "success");
-    try {
-      localStorage.setItem("webmind-language", currentLanguage);
-    } catch {
-      // Language persistence is optional; keep the page usable when storage is blocked.
-    }
+    safeLanguageSet(currentLanguage);
     window.__webmindLanguage = language;
   }
 
@@ -650,19 +713,37 @@
   function detectLanguage() {
     let stored = null;
     try {
-      stored = localStorage.getItem("webmind-language");
+      stored = localStorage.getItem(LANGUAGE_KEY);
     } catch {
       stored = null;
     }
-    if (stored && COPY[stored]) {
-      return stored;
-    }
+    if (stored && COPY[stored]) return stored;
     const browserLanguage = (navigator.language || "").toLowerCase();
     return browserLanguage.startsWith("zh") ? "bilingual" : "en";
   }
 
+  function safeLanguageSet(language) {
+    try {
+      localStorage.setItem(LANGUAGE_KEY, language);
+    } catch {
+      // Language persistence is optional.
+    }
+  }
+
   function getCurrentArticles() {
     return window.__lastArticles || [];
+  }
+
+  function debounce(fn, delay) {
+    let timer = null;
+    return (...args) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => fn(...args), delay);
+    };
+  }
+
+  function cssEscape(value) {
+    return window.CSS?.escape ? CSS.escape(String(value)) : String(value).replace(/"/g, '\\"');
   }
 
   function escapeHtml(value) {
@@ -672,7 +753,7 @@
       .replace(/>/g, "&gt;");
   }
 
-  init().catch(error => {
+  init().catch((error) => {
     showError(`${t("initFailed")}: ${error.message || error}`);
     setStatus(t("initFailed"), "error");
   });

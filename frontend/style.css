@@ -192,6 +192,11 @@ button:disabled {
   opacity: 0.6;
 }
 
+button:focus-visible {
+  outline: 3px solid rgba(15, 122, 229, 0.22);
+  outline-offset: 2px;
+}
+
 button.primary {
   background: var(--accent);
   color: #fff;
@@ -460,6 +465,14 @@ button.ghost.danger {
   color: var(--muted);
 }
 
+.app-footer {
+  margin: 18px auto 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+  text-align: center;
+}
+
 @media (max-width: 960px) {
   .layout {
     grid-template-columns: 1fr;
@@ -495,6 +508,10 @@ button.ghost.danger {
 
   button {
     flex: 1 1 140px;
+  }
+
+  .panel {
+    padding: 14px;
   }
 
   .article-card dl,
